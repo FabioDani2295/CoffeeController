@@ -1,13 +1,33 @@
 import streamlit as st
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import plotly.express as px
 
-st.title("La mia prima app con Streamlit!")
-st.write("Benvenuto nella mia applicazione web interattiva.")
+# Titolo dell'app
+st.title("📊 Dashboard Interattiva con Streamlit")
 
-# Upload di file
-uploaded_file = st.file_uploader("Carica un file CSV", type="csv")
-if uploaded_file:
-    import pandas as pd
-    df = pd.read_csv(uploaded_file)
-    st.write(df.head())
+# Generare dati casuali
+st.sidebar.header("Impostazioni del grafico")
+num_points = st.sidebar.slider("Numero di punti", min_value=10, max_value=1000, value=100)
 
-print("procdiovedi questo secondo commit?")
+data = pd.DataFrame({
+    "x": np.linspace(0, 10, num_points),
+    "y": np.sin(np.linspace(0, 10, num_points)) + np.random.normal(scale=0.2, size=num_points)
+})
+
+# **Grafico Matplotlib**
+st.subheader("📌 Grafico con Matplotlib")
+fig, ax = plt.subplots()
+ax.plot(data["x"], data["y"], label="Seno + Rumore", color='blue')
+ax.legend()
+st.pyplot(fig)
+
+# **Grafico con Plotly**
+st.subheader("📌 Grafico Interattivo con Plotly")
+fig_plotly = px.scatter(data, x="x", y="y", title="Grafico Interattivo")
+st.plotly_chart(fig_plotly)
+
+# **Mostrare i dati**
+st.subheader("📄 Anteprima dei dati")
+st.write(data.head())
