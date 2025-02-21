@@ -9,6 +9,7 @@ st.set_page_config(
     page_title="📊 Dashboard Avanzata con Streamlit",
     page_icon="📈",
     layout="wide"
+
 )
 
 # Stile personalizzato con CSS
