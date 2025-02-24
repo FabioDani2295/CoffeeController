@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-def load_data(num_points=20):
+def load_data(num_points=200):
     df = pd.DataFrame({
         "x": np.linspace(0, 10, num_points),
         "y": np.sin(np.linspace(0, 10, num_points)) + np.random.normal(scale=0.2, size=num_points)
