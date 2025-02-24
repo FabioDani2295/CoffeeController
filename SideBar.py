@@ -2,7 +2,7 @@ import streamlit as st
 
 
 def show_sidebar():
-    st.sidebar.header("🔧 Impostazioni")
+    st.sidebar.header("🔧 provaimpost")
 
     # Slider per il numero di punti
     num_points = st.sidebar.slider("Numero di punti", min_value=10, max_value=1000, value=100)
