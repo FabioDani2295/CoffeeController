@@ -22,5 +22,5 @@ def display_charts(df):
 
     # **Grafico 3: **
     st.subheader("📊 Peso Caffe")
-    fig_max = px.scatter(df, x=df.index, y="Weight", title="Distribuzione peso del caffe erogato")
+    fig_max = px.scatter(df, x=df.index, y="Max Value", title="Distribuzione dei Valori Massimi")
     st.plotly_chart(fig_max, use_container_width=True)
