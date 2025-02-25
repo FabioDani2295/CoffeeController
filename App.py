@@ -7,7 +7,7 @@ from streamlit_autorefresh import st_autorefresh  # Import per aggiornamento aut
 st.set_page_config(page_title="📊 Environmental Dashboard", page_icon="🌍", layout="wide")
 
 # 📌 **Aggiornamento automatico ogni 10 secondi**
-st_autorefresh(interval=10 * 1000, key="data_refresh")
+st_autorefresh(interval=30 * 1000, key="data_refresh")
 
 # 📌 **Caricare i dati aggiornati dal CSV su GitHub**
 df = Data.load_data()
