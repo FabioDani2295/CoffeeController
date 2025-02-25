@@ -14,7 +14,7 @@ df = Data.load_data()
 Charts.display_charts(df)
 st.markdown("---")
 # **Mostrare immagine
-st.image("ImageData.jpg", caption="📸 Analisi Ambientale", use_container_width=False)
+st.image("ImageData.jpg", caption="📸 Analisi Ambientale dio amore", use_container_width=False)
 
 
 
