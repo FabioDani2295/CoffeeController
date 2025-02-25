@@ -13,4 +13,3 @@ Charts.display_charts(df)
 
 # Footer
 st.markdown("---")
-st.text("📌 Dashboard sviluppata con Streamlit")
