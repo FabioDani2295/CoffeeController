@@ -1,10 +1,8 @@
 import pandas as pd
-import streamlit as st
+import time
 
-# 📌 URL del file CSV su GitHub
-csv_url = "https://raw.githubusercontent.com/FabioDani2295/CoffeeController/main/CoffeStatistics.csv"
-
-@st.cache_data(ttl=10)  # Cache aggiornata ogni 10 secondi
+# 📌 URL del file CSV su GitHub con timestamp per evitare cache
 def load_data():
-    df = pd.read_csv(csv_url)
-    return df
+    timestamp = int(time.time())  # Cambia ogni secondo
+    csv_url = f"https://raw.githubusercontent.com/FabioDani2295/CoffeeController/main/CoffeStatistics.csv?{timestamp}"
+    return pd.read_csv(csv_url)
