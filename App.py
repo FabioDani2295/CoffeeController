@@ -4,7 +4,7 @@ import Charts
 import Data
 
 # Configurazione della pagina
-st.set_page_config(page_title="☕ Coffee Dashboard", page_icon="📊", layout="wide")
+st.set_page_config(page_title="☕ Testing Coffee Dashboard", page_icon="📊", layout="wide")
 
 # Sidebar
 filters = SideBar.show_sidebar()
@@ -13,11 +13,10 @@ filters = SideBar.show_sidebar()
 df = Data.load_data()
 
 # Applicare i filtri della sidebar
-filtered_df = Data.filter_data(df, filters)
+#filtered_df = Data.filter_data(df, filters)
 
 # Mostrare la dashboard con grafici
-Charts.display_charts(filtered_df)
+#Charts.display_charts(filtered_df)
 
 # Footer
 st.markdown("---")
-st.text("📌 Dashboard sviluppata con Streamlit")

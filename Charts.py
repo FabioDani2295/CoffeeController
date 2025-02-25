@@ -3,28 +3,24 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 
 def display_charts(df):
-    st.markdown("### 📊 Analisi delle Vendite di Caffè")
+    st.markdown("### 📊 Analisi dei Dati")
 
+    # Creare due colonne per organizzare i grafici
     col1, col2 = st.columns(2)
 
-    # **Grafico Matplotlib**
+    # **Grafico 1: Max Temperature (°C)**
     with col1:
-        st.subheader("📌 Vendite per Tipo di Caffè")
-        fig, ax = plt.subplots(figsize=(6,4))
-        df.groupby("CoffeeType")["Sales (€)"].sum().plot(kind="bar", color="brown", ax=ax)
-        ax.set_ylabel("Vendite (€)")
-        ax.set_xlabel("Tipo di Caffè")
-        ax.grid(True, linestyle="--", alpha=0.7)
-        st.pyplot(fig)
+        st.subheader("🌡 Massima Temperatura (°C)")
+        fig_temp = px.line(df, x=df.index, y="Max Temperature (°C)", title="Andamento della Temperatura")
+        st.plotly_chart(fig_temp, use_container_width=True)
 
-    # **Grafico Plotly Interattivo**
+    # **Grafico 2: PM1_0_CU**
     with col2:
-        st.subheader("📌 Vendite Giorno per Giorno")
-        fig_plotly = px.line(df, x="Date", y="Sales (€)", color="CoffeeType", title="Andamento Vendite")
-        fig_plotly.update_layout(template="plotly_dark")
-        st.plotly_chart(fig_plotly, use_container_width=True)
+        st.subheader("🌫 Concentrazione di PM1_0_CU")
+        fig_pm = px.line(df, x=df.index, y="PM1_0_CU", title="Andamento del Particolato Fine (PM1_0)")
+        st.plotly_chart(fig_pm, use_container_width=True)
 
-    # **Mostrare i dati grezzi se selezionato**
-    if "show_data" in df and df["show_data"].all():
-        st.subheader("📄 Dati Grezzi")
-        st.dataframe(df.style.format("{:.2f}"))
+    # **Grafico 3: **
+    st.subheader("📊 Volume Caffe")
+    fig_max = px.histogram(df, x="Max Value", title="Distribuzione dei Valori Massimi")
+    st.plotly_chart(fig_max, use_container_width=True)
