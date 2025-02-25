@@ -2,14 +2,16 @@ import streamlit as st
 import Charts
 import Data
 
-# Configurazione della pagina
 st.set_page_config(page_title="📊 Environmental Dashboard", page_icon="🌍", layout="wide")
 
-# Caricare i dati
-df = Data.load_data()  # Nessun filtro, mostriamo tutti i dati
+# **Mostrare l'Immagine in Alto**
+st.image("ImageData.jpg", caption="📸 Analisi Ambientale", use_column_width=True)
 
-# Mostrare la dashboard con grafici
+# **Caricare i dati**
+df = Data.load_data()
+
+# **Mostrare la dashboard con grafici**
 Charts.display_charts(df)
 
-# Footer
 st.markdown("---")
+
