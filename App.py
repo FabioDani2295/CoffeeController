@@ -1,6 +1,7 @@
 import streamlit as st
 import Charts
 import Data
+import time
 from streamlit_autorefresh import st_autorefresh  # Import per aggiornamento automatico
 
 # 📌 Configurazione della dashboard
@@ -8,6 +9,9 @@ st.set_page_config(page_title="📊 Environmental Dashboard", page_icon="🌍", 
 
 # 📌 **Aggiornamento automatico ogni 30 secondi**
 st_autorefresh(interval=30 * 1000, key="data_refresh")
+
+# 📌 **Orario dell'ultimo aggiornamento**
+st.markdown(f"🕒 **Ultimo aggiornamento:** {time.strftime('%Y-%m-%d %H:%M:%S')}")
 
 # 📌 **Caricare i dati aggiornati dal CSV**
 df = Data.load_data()
