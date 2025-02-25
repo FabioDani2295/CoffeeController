@@ -22,5 +22,5 @@ def display_charts(df):
 
     # **Grafico 3: **
     st.subheader("📊 Volume Caffe")
-    fig_max = px.histogram(df, x="Max Value", title="Distribuzione dei Valori Massimi")
+    fig_max = px.scatter(df, x="Max Value", title="Distribuzione dei Valori Massimi")
     st.plotly_chart(fig_max, use_container_width=True)
