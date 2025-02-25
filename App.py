@@ -21,9 +21,13 @@ Charts.display_charts(df)
 
 st.markdown("---")
 
+# 📌 **Mostrare immagine**
+st.image("ImageData.jpg", caption="📸 Analisi Ambientale", use_container_width=False)
+
+st.markdown("---")
+
 # 📌 **Sezione: Visualizzazione dei Dati Grezzi**
 st.subheader("📄 Dati Grezzi")
 st.write(df)  # Mostra la tabella con i dati grezzi
 
-# 📌 **Mostrare immagine**
-st.image("ImageData.jpg", caption="📸 Analisi Ambientale", use_container_width=False)
+
