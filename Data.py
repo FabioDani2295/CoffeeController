@@ -1,9 +1,20 @@
 import pandas as pd
-import numpy as np
 
-def load_data(num_points=100):
-    df = pd.DataFrame({
-        "x": np.linspace(0, 10, num_points),
-        "y": np.sin(np.linspace(0, 10, num_points)) + np.random.normal(scale=0.2, size=num_points)
-    })
+
+# Caricamento dati da CSV
+def load_data():
+    file_path = "CoffeStatistics.csv"  # Assicurati che il file sia caricato nella directory corretta
+    df = pd.read_csv(file_path)
+    return df
+
+
+# Applicazione filtri
+def filter_data(df, filters):
+    if filters["coffee_type"] != "Tutti":
+        df = df[df["CoffeeType"] == filters["coffee_type"]]
+
+    # Filtrare per vendite
+    min_sales, max_sales = filters["sales_range"]
+    df = df[(df["Sales (€)"] >= min_sales) & (df["Sales (€)"] <= max_sales)]
+
     return df

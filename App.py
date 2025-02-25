@@ -1,19 +1,22 @@
 import streamlit as st
-import SideBar  # Modulo personalizzato per la sidebar
-import Charts   # Modulo per i grafici
-import Data    # Modulo per la gestione dati
+import SideBar
+import Charts
+import Data
 
 # Configurazione della pagina
-st.set_page_config(page_title="📊 Dashboard", page_icon="📈", layout="wide")
+st.set_page_config(page_title="☕ Coffee Dashboard", page_icon="📊", layout="wide")
 
 # Sidebar
-SideBar.show_sidebar()
+filters = SideBar.show_sidebar()
 
 # Caricare i dati
 df = Data.load_data()
 
-# Mostrare i grafici
-Charts.display_charts(df)
+# Applicare i filtri della sidebar
+filtered_df = Data.filter_data(df, filters)
+
+# Mostrare la dashboard con grafici
+Charts.display_charts(filtered_df)
 
 # Footer
 st.markdown("---")
