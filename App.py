@@ -7,7 +7,7 @@ import Data
 st.set_page_config(page_title="☕ Testing Coffee Dashboard", page_icon="📊", layout="wide")
 
 # Sidebar
-filters = SideBar.show_sidebar()
+#filters = SideBar.show_sidebar()
 
 # Caricare i dati
 df = Data.load_data()
