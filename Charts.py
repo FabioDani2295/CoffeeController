@@ -22,7 +22,7 @@ def display_charts(df):
         # 📌 **Grafico 2: PM1_0_CU**
     with col3:
         st.subheader("🧪 Concentrazione di PM1_0_CU")
-        fig_pm = px.line(df, x=df.index, y="PM1_0_CU", title="Andamento del Particolato Fine (PM1_0)")
+        fig_pm = px.line(df, x=df.index, y="PM2_5_CU", title="Andamento del Particolato Fine (PM2_0)")
         st.plotly_chart(fig_pm, use_container_width=True)
 
     # 📌 **Grafico 3: Max Value**
