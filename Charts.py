@@ -5,7 +5,7 @@ def display_charts(df):
     st.markdown("### 📊 Analisi dei Dati")
 
     # 📌 Creare due colonne per i grafici
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
 
     # 📌 **Grafico 1: Max Temperature**
     with col1:
@@ -15,6 +15,12 @@ def display_charts(df):
 
     # 📌 **Grafico 2: PM1_0_CU**
     with col2:
+        st.subheader("🧪 Concentrazione di PM1_0_CU")
+        fig_pm = px.line(df, x=df.index, y="PM1_0_CU", title="Andamento del Particolato Fine (PM1_0)")
+        st.plotly_chart(fig_pm, use_container_width=True)
+
+        # 📌 **Grafico 2: PM1_0_CU**
+    with col3:
         st.subheader("🧪 Concentrazione di PM1_0_CU")
         fig_pm = px.line(df, x=df.index, y="PM1_0_CU", title="Andamento del Particolato Fine (PM1_0)")
         st.plotly_chart(fig_pm, use_container_width=True)
