@@ -480,42 +480,42 @@ if not df.empty:
             st.info("Select at least 2 metrics to view correlations")
 
     with col2:
-    # Latest sample percentile ranking among all samples
-    if len(df) > 1:
-        # Select metrics to rank
-        rank_metrics = ["Max Temperature (°C)", "PM2_5_CU", "particles_beyond_0_3"]
-        rank_metrics = [m for m in rank_metrics if m in df.columns]
+        # Latest sample percentile ranking among all samples
+        if len(df) > 1:
+            # Select metrics to rank
+            rank_metrics = ["Max Temperature (°C)", "PM2_5_CU", "particles_beyond_0_3"]
+            rank_metrics = [m for m in rank_metrics if m in df.columns]
 
-        if rank_metrics:
-            # Calculate percentile ranks for the latest sample
-            percentile_ranks = {}
-            for metric in rank_metrics:
-                all_values = df[metric].sort_values().values
-                latest_value = latest_sample[metric]
-                # Find position of the latest value
-                percentile = sum(all_values < latest_value) / len(all_values) * 100
-                percentile_ranks[metric] = percentile
+            if rank_metrics:
+                # Calculate percentile ranks for the latest sample
+                percentile_ranks = {}
+                for metric in rank_metrics:
+                    all_values = df[metric].sort_values().values
+                    latest_value = latest_sample[metric]
+                    # Find position of the latest value
+                    percentile = sum(all_values < latest_value) / len(all_values) * 100
+                    percentile_ranks[metric] = percentile
 
-            # Create bar chart of percentiles
-            fig = px.bar(
-                x=list(percentile_ranks.keys()),
-                y=list(percentile_ranks.values()),
-                labels={'x': 'Metric', 'y': 'Percentile Rank'},
-                height=300,
-                text=[f"{p:.1f}%" for p in percentile_ranks.values()]
-            )
-            fig.update_layout(
-                margin=dict(l=10, r=10, t=30, b=10),
-                title="Latest Sample Percentile Rank",
-                yaxis=dict(range=[0, 100])
-            )
-            fig.update_traces(textposition='outside')
+                # Create bar chart of percentiles
+                fig = px.bar(
+                    x=list(percentile_ranks.keys()),
+                    y=list(percentile_ranks.values()),
+                    labels={'x': 'Metric', 'y': 'Percentile Rank'},
+                    height=300,
+                    text=[f"{p:.1f}%" for p in percentile_ranks.values()]
+                )
+                fig.update_layout(
+                    margin=dict(l=10, r=10, t=30, b=10),
+                    title="Latest Sample Percentile Rank",
+                    yaxis=dict(range=[0, 100])
+                )
+                fig.update_traces(textposition='outside')
 
-            st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("Key metrics not available for ranking")
         else:
-            st.info("Key metrics not available for ranking")
-    else:
-        st.info("Need more samples for percentile ranking")
+            st.info("Need more samples for percentile ranking")
 
     # RAW DATA VIEW - more compact
     with st.expander("View Raw Data"):
