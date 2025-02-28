@@ -8,6 +8,14 @@ import pytz
 from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 
+# Page configuration
+st.set_page_config(
+    page_title="☕ Coffee Assessment Dashboard",
+    page_icon="☕",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
 st.markdown("""
     <style>
         /* Cambia il colore del testo delle metriche in nero */
@@ -21,14 +29,6 @@ st.markdown("""
         }
     </style>
     """, unsafe_allow_html=True)
-
-# Page configuration
-st.set_page_config(
-    page_title="☕ Coffee Assessment Dashboard",
-    page_icon="☕",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
 
 # Add custom CSS for a more compact design
 st.markdown("""
