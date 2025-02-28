@@ -66,9 +66,7 @@ st.markdown("""
     [data-testid="stMetricDelta"] svg {
         display: none !important;
     }
-    .stPlotlyChart {
-        height: auto !important;
-    }
+
     /* Make the text smaller */
     .small-font {
         font-size: 0.9rem;
@@ -81,33 +79,6 @@ st.markdown("""
     /* Customize sidebar */
     .css-1d391kg, .css-1lcbmhc {
         padding-top: 1rem;
-    }
-    /* Slim down metric tiles and make text black */
-    [data-testid="stMetric"] {
-        background-color: #f9f9f9;
-        padding: 0.5rem;
-        border-radius: 0.3rem;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        color: black !important;
-    }
-    [data-testid="stMetric"] > div {
-        font-size: 0.9rem !important;
-        color: black !important;
-    }
-    [data-testid="stMetric"] > div:nth-child(2) {
-        font-size: 1.2rem !important;
-        color: black !important;
-    }
-    /* Make metric delta label black */
-    [data-testid="stMetricDelta"] {
-        color: black !important;
-    }
-    [data-testid="stMetricDelta"] > div {
-        color: black !important;
-    }
-    /* Ensure all text in the metrics section is black */
-    .metric-container * {
-        color: black !important;
     }
     /* Dataframe styling */
     .dataframe-container {
@@ -214,9 +185,6 @@ if not df.empty:
 
     st.markdown('<div class="section-header">Latest Coffee Sample Assessment</div>', unsafe_allow_html=True)
 
-    # Create two columns - latest coffee metrics and comparison
-    col1, col2 = st.columns([1, 2])
-
     # Create one column for the latest coffee metrics
     st.markdown(
         '<h4 style="color: white; background-color: #333; padding: 5px; border-radius: 5px;">Sample #{}</h4>'.format(
@@ -250,8 +218,8 @@ if not df.empty:
                 else:
                     st.metric(label, f"{value:.1f}{unit}")
 
-    # Create two columns for the image and color display
-    img_col, color_col = st.columns([3, 1])
+    # Create two columns for image/color and radar chart
+    col1, col2 = st.columns([1, 2])
 
     with col1:
         # Add RGB color display if available
@@ -259,16 +227,16 @@ if not df.empty:
             r, g, b = int(latest_sample['Mean_Red']), int(latest_sample['Mean_Green']), int(latest_sample['Mean_Blue'])
             st.markdown(
                 f"""
-                    <div style="
-                        width: 100%; 
-                        height: 30px; 
-                        background-color: rgb({r},{g},{b}); 
-                        border-radius: 5px;
-                        margin-top: 10px;
-                        margin-bottom: 5px;
-                    "></div>
-                    <div style="color:white; font-size:0.9rem;">RGB: {r}, {g}, {b}</div>
-                    """,
+                <div style="
+                    width: 100%; 
+                    height: 30px; 
+                    background-color: rgb({r},{g},{b}); 
+                    border-radius: 5px;
+                    margin-top: 10px;
+                    margin-bottom: 5px;
+                "></div>
+                <div style="color:white; font-size:0.9rem;">RGB: {r}, {g}, {b}</div>
+                """,
                 unsafe_allow_html=True
             )
 
@@ -278,148 +246,102 @@ if not df.empty:
         except Exception as e:
             st.warning(f"Coffee image not available: {e}")
 
-with col2:
-    # Create radar chart comparing latest to average of previous samples
-    if len(df) > 1:
-        # Select metrics for radar chart with exact columns as specified
-        radar_metrics = [
-            "Max Temperature (°C)",
-            "PM1_0_CU",
-            "PM2_5_CU",
-            "PM10_CU",
-            "Max Value",
-            "Mean_Red",
-            "Mean_Green",
-            "Mean_Blue"
-        ]
+    with col2:
+        # Create radar chart comparing latest to average of previous samples
+        if len(df) > 1:
+            # Select metrics for radar chart with exact columns as specified
+            radar_metrics = [
+                "Max Temperature (°C)",
+                "PM1_0_CU",
+                "PM2_5_CU",
+                "PM10_CU",
+                "Max Value",
+                "Mean_Red",
+                "Mean_Green",
+                "Mean_Blue"
+            ]
 
-        # Filter to metrics that exist in the dataframe
-        radar_metrics = [m for m in radar_metrics if m in df.columns]
+            # Filter to metrics that exist in the dataframe
+            radar_metrics = [m for m in radar_metrics if m in df.columns]
 
-        if radar_metrics:
-            # Calculate the average of previous samples
-            avg_previous = df.iloc[:-1][radar_metrics].mean()
+            if radar_metrics:
+                # Calculate the average of previous samples
+                avg_previous = df.iloc[:-1][radar_metrics].mean()
 
-            # Normalize the data for better visualization
-            max_values = df[radar_metrics].max()
-            min_values = df[radar_metrics].min()
+                # Normalize the data for better visualization
+                max_values = df[radar_metrics].max()
+                min_values = df[radar_metrics].min()
 
-            # Avoid division by zero
-            range_values = max_values - min_values
-            range_values = range_values.replace(0, 1)  # Replace zeros with 1 to avoid division by zero
+                # Avoid division by zero
+                range_values = max_values - min_values
+                range_values = range_values.replace(0, 1)  # Replace zeros with 1 to avoid division by zero
 
-            # Normalize latest and average values
-            latest_normalized = (latest_sample[radar_metrics] - min_values) / range_values
-            avg_normalized = (avg_previous - min_values) / range_values
+                # Normalize latest and average values
+                latest_normalized = (latest_sample[radar_metrics] - min_values) / range_values
+                avg_normalized = (avg_previous - min_values) / range_values
 
-            # Create radar chart
-            fig = go.Figure()
+                # Create radar chart
+                fig = go.Figure()
 
-            # Add trace for average previous
-            fig.add_trace(go.Scatterpolar(
-                r=avg_normalized.values,
-                theta=radar_metrics,
-                fill='toself',
-                name='Average Previous',
-                line=dict(color='rgba(135, 206, 250, 0.7)'),
-            ))
+                # Add trace for average previous
+                fig.add_trace(go.Scatterpolar(
+                    r=avg_normalized.values,
+                    theta=radar_metrics,
+                    fill='toself',
+                    name='Average Previous',
+                    line=dict(color='rgba(135, 206, 250, 0.7)'),
+                ))
 
-            # Add trace for latest sample
-            fig.add_trace(go.Scatterpolar(
-                r=latest_normalized.values,
-                theta=radar_metrics,
-                fill='toself',
-                name='Latest Sample',
-                line=dict(color='rgba(255, 99, 71, 0.8)'),
-            ))
+                # Add trace for latest sample
+                fig.add_trace(go.Scatterpolar(
+                    r=latest_normalized.values,
+                    theta=radar_metrics,
+                    fill='toself',
+                    name='Latest Sample',
+                    line=dict(color='rgba(255, 99, 71, 0.8)'),
+                ))
 
-            # Update layout
-            fig.update_layout(
-                polar=dict(
-                    radialaxis=dict(
-                        visible=True,
-                        range=[0, 1]
-                    )
-                ),
-                showlegend=True,
-                legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
-                margin=dict(l=30, r=30, t=20, b=30),
-                height=400,
-                font=dict(color="black")
-            )
+                # Update layout
+                fig.update_layout(
+                    polar=dict(
+                        radialaxis=dict(
+                            visible=True,
+                            range=[0, 1]
+                        )
+                    ),
+                    showlegend=True,
+                    legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
+                    margin=dict(l=30, r=30, t=20, b=30),
+                    height=400,
+                    font=dict(color="black")
+                )
 
-            st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("Insufficient metrics available for comparison")
         else:
-            st.info("Insufficient metrics available for comparison")
-    else:
-        st.info("Only one sample available. More samples needed for comparison.")
+            st.info("Only one sample available. More samples needed for comparison.")
 
-# HISTORICAL TRENDS
-st.markdown('<div class="section-header">Historical Sample Analysis</div>', unsafe_allow_html=True)
+    # HISTORICAL TRENDS
+    st.markdown('<div class="section-header">Historical Sample Analysis</div>', unsafe_allow_html=True)
 
-# Create tabs for different categories of metrics
-tabs = st.tabs([
-    "Temperature",
-    "Particulate",
-    "Color",
-    "Particles",
-    "Values"
-])
+    # Create tabs for different categories of metrics
+    tabs = st.tabs([
+        "Temperature",
+        "Particulate",
+        "Color",
+        "Particles",
+        "Values"
+    ])
 
-# Temperature tab
-with tabs[0]:
-    temp_metrics = selected_metrics.get("Temperature", [])
-    if temp_metrics:
-        fig = px.line(
-            df,
-            x="Sample ID",
-            y=temp_metrics,
-            markers=True,
-            line_shape="spline",
-            height=280
-        )
-        fig.update_layout(
-            legend=dict(orientation="h", yanchor="bottom", y=-0.5, xanchor="center", x=0.5),
-            margin=dict(l=20, r=20, t=10, b=40),
-            xaxis=dict(tickmode='linear', dtick=1)
-        )
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.info("Select temperature metrics in the sidebar")
-
-# Particulate tab
-with tabs[1]:
-    pm_metrics = selected_metrics.get("Particulate Matter", [])
-    if pm_metrics:
-        fig = px.line(
-            df,
-            x="Sample ID",
-            y=pm_metrics,
-            markers=True,
-            line_shape="spline",
-            height=280
-        )
-        fig.update_layout(
-            legend=dict(orientation="h", yanchor="bottom", y=-0.5, xanchor="center", x=0.5),
-            margin=dict(l=20, r=20, t=10, b=40),
-            xaxis=dict(tickmode='linear', dtick=1)
-        )
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.info("Select particulate metrics in the sidebar")
-
-# Color tab
-with tabs[2]:
-    color_metrics = selected_metrics.get("Color", [])
-    if color_metrics and 'Mean_Red' in df.columns and 'Mean_Green' in df.columns and 'Mean_Blue' in df.columns:
-        col1, col2 = st.columns([3, 1])
-
-        with col1:
-            # Line chart for selected color metrics
+    # Temperature tab
+    with tabs[0]:
+        temp_metrics = selected_metrics.get("Temperature", [])
+        if temp_metrics:
             fig = px.line(
                 df,
                 x="Sample ID",
-                y=color_metrics,
+                y=temp_metrics,
                 markers=True,
                 line_shape="spline",
                 height=280
@@ -430,15 +352,61 @@ with tabs[2]:
                 xaxis=dict(tickmode='linear', dtick=1)
             )
             st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Select temperature metrics in the sidebar")
 
-        with col2:
-            # Color swatches for all samples
-            st.markdown("#### Color Swatches")
-            for i in range(len(df)):
-                r, g, b = int(df.iloc[i]['Mean_Red']), int(df.iloc[i]['Mean_Green']), int(df.iloc[i]['Mean_Blue'])
-                sample_id = i + 1
-                st.markdown(
-                    f"""
+    # Particulate tab
+    with tabs[1]:
+        pm_metrics = selected_metrics.get("Particulate Matter", [])
+        if pm_metrics:
+            fig = px.line(
+                df,
+                x="Sample ID",
+                y=pm_metrics,
+                markers=True,
+                line_shape="spline",
+                height=280
+            )
+            fig.update_layout(
+                legend=dict(orientation="h", yanchor="bottom", y=-0.5, xanchor="center", x=0.5),
+                margin=dict(l=20, r=20, t=10, b=40),
+                xaxis=dict(tickmode='linear', dtick=1)
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Select particulate metrics in the sidebar")
+
+    # Color tab
+    with tabs[2]:
+        color_metrics = selected_metrics.get("Color", [])
+        if color_metrics and 'Mean_Red' in df.columns and 'Mean_Green' in df.columns and 'Mean_Blue' in df.columns:
+            col1, col2 = st.columns([3, 1])
+
+            with col1:
+                # Line chart for selected color metrics
+                fig = px.line(
+                    df,
+                    x="Sample ID",
+                    y=color_metrics,
+                    markers=True,
+                    line_shape="spline",
+                    height=280
+                )
+                fig.update_layout(
+                    legend=dict(orientation="h", yanchor="bottom", y=-0.5, xanchor="center", x=0.5),
+                    margin=dict(l=20, r=20, t=10, b=40),
+                    xaxis=dict(tickmode='linear', dtick=1)
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
+            with col2:
+                # Color swatches for all samples
+                st.markdown("#### Color Swatches")
+                for i in range(len(df)):
+                    r, g, b = int(df.iloc[i]['Mean_Red']), int(df.iloc[i]['Mean_Green']), int(df.iloc[i]['Mean_Blue'])
+                    sample_id = i + 1
+                    st.markdown(
+                        f"""
                         <div style="display: flex; align-items: center; margin-bottom: 5px; font-size: 0.8rem;">
                             <div style="flex: 0 0 20px; margin-right: 5px;">#{sample_id}</div>
                             <div style="
@@ -449,141 +417,141 @@ with tabs[2]:
                             "></div>
                         </div>
                         """,
-                    unsafe_allow_html=True
-                )
-    else:
-        st.info("Select color metrics in the sidebar")
+                        unsafe_allow_html=True
+                    )
+        else:
+            st.info("Select color metrics in the sidebar")
 
-# Particles tab
-with tabs[3]:
-    particles_metrics = selected_metrics.get("Particles", [])
-    if particles_metrics:
-        fig = px.bar(
-            df,
-            x="Sample ID",
-            y=particles_metrics,
-            barmode="group",
-            height=280
-        )
-        fig.update_layout(
-            legend=dict(orientation="h", yanchor="bottom", y=-0.5, xanchor="center", x=0.5),
-            margin=dict(l=20, r=20, t=10, b=40),
-            xaxis=dict(tickmode='linear', dtick=1)
-        )
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.info("Select particle metrics in the sidebar")
-
-# Values tab
-with tabs[4]:
-    values_metrics = selected_metrics.get("Values", [])
-    if values_metrics:
-        fig = px.line(
-            df,
-            x="Sample ID",
-            y=values_metrics,
-            markers=True,
-            line_shape="spline",
-            height=280
-        )
-        fig.update_layout(
-            legend=dict(orientation="h", yanchor="bottom", y=-0.5, xanchor="center", x=0.5),
-            margin=dict(l=20, r=20, t=10, b=40),
-            xaxis=dict(tickmode='linear', dtick=1)
-        )
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.info("Select value metrics in the sidebar")
-
-# STATISTICAL COMPARISON
-st.markdown('<div class="section-header">Statistical Analysis</div>', unsafe_allow_html=True)
-
-# Use full width for correlation matrix
-all_selected = []
-for metrics in selected_metrics.values():
-    all_selected.extend(metrics)
-
-if len(all_selected) >= 2:
-    corr = df[all_selected].corr()
-
-    fig = px.imshow(
-        corr,
-        text_auto=True,
-        color_continuous_scale='RdBu_r',
-        zmin=-1, zmax=1,
-        height=500
-    )
-    fig.update_layout(
-        margin=dict(l=10, r=10, t=30, b=10)
-    )
-    # Make the font more readable
-    fig.update_traces(textfont=dict(size=10))
-
-    st.plotly_chart(fig, use_container_width=True)
-else:
-    st.info("Select at least 2 metrics to view correlations")
-
-# Create columns for percentile analysis
-col1, col2 = st.columns(2)
-
-with col1:
-    # Latest sample percentile ranking among all samples
-    if len(df) > 1:
-        # Select metrics to rank
-        rank_metrics = ["Max Temperature (°C)", "PM2_5_CU", "particles_beyond_0_3"]
-        rank_metrics = [m for m in rank_metrics if m in df.columns]
-
-        if rank_metrics:
-            # Calculate percentile ranks for the latest sample
-            percentile_ranks = {}
-            for metric in rank_metrics:
-                all_values = df[metric].sort_values().values
-                latest_value = latest_sample[metric]
-                # Find position of the latest value
-                percentile = sum(all_values < latest_value) / len(all_values) * 100
-                percentile_ranks[metric] = percentile
-
-            # Create bar chart of percentiles
+    # Particles tab
+    with tabs[3]:
+        particles_metrics = selected_metrics.get("Particles", [])
+        if particles_metrics:
             fig = px.bar(
-                x=list(percentile_ranks.keys()),
-                y=list(percentile_ranks.values()),
-                labels={'x': 'Metric', 'y': 'Percentile Rank'},
-                height=300,
-                text=[f"{p:.1f}%" for p in percentile_ranks.values()]
+                df,
+                x="Sample ID",
+                y=particles_metrics,
+                barmode="group",
+                height=280
             )
             fig.update_layout(
-                margin=dict(l=10, r=10, t=30, b=10),
-                title="Latest Sample Percentile Rank",
-                yaxis=dict(range=[0, 100])
+                legend=dict(orientation="h", yanchor="bottom", y=-0.5, xanchor="center", x=0.5),
+                margin=dict(l=20, r=20, t=10, b=40),
+                xaxis=dict(tickmode='linear', dtick=1)
             )
-            fig.update_traces(textposition='outside')
-
             st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("Key metrics not available for ranking")
+            st.info("Select particle metrics in the sidebar")
+
+    # Values tab
+    with tabs[4]:
+        values_metrics = selected_metrics.get("Values", [])
+        if values_metrics:
+            fig = px.line(
+                df,
+                x="Sample ID",
+                y=values_metrics,
+                markers=True,
+                line_shape="spline",
+                height=280
+            )
+            fig.update_layout(
+                legend=dict(orientation="h", yanchor="bottom", y=-0.5, xanchor="center", x=0.5),
+                margin=dict(l=20, r=20, t=10, b=40),
+                xaxis=dict(tickmode='linear', dtick=1)
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Select value metrics in the sidebar")
+
+    # STATISTICAL ANALYSIS
+    st.markdown('<div class="section-header">Statistical Analysis</div>', unsafe_allow_html=True)
+
+    # Use full width for correlation matrix
+    all_selected = []
+    for metrics in selected_metrics.values():
+        all_selected.extend(metrics)
+
+    if len(all_selected) >= 2:
+        corr = df[all_selected].corr()
+
+        fig = px.imshow(
+            corr,
+            text_auto=True,
+            color_continuous_scale='RdBu_r',
+            zmin=-1, zmax=1,
+            height=500
+        )
+        fig.update_layout(
+            margin=dict(l=10, r=10, t=30, b=10)
+        )
+        # Make the font more readable
+        fig.update_traces(textfont=dict(size=10))
+
+        st.plotly_chart(fig, use_container_width=True)
     else:
-        st.info("Need more samples for percentile ranking")
+        st.info("Select at least 2 metrics to view correlations")
 
-with col2:
-    # Display placeholder to avoid empty column
-    st.write("")
+    # Create columns for percentile analysis
+    col1, col2 = st.columns(2)
 
-# RAW DATA VIEW - more compact
-with st.expander("View Raw Data"):
-    st.markdown('<div class="dataframe-container">', unsafe_allow_html=True)
-    st.dataframe(df, use_container_width=True, height=200)
-    st.markdown('</div>', unsafe_allow_html=True)
+    with col1:
+        # Latest sample percentile ranking among all samples
+        if len(df) > 1:
+            # Select metrics to rank
+            rank_metrics = ["Max Temperature (°C)", "PM2_5_CU", "particles_beyond_0_3"]
+            rank_metrics = [m for m in rank_metrics if m in df.columns]
 
-    # Download button
-    st.download_button(
-        "Download CSV",
-        data=df.to_csv(index=False).encode('utf-8'),
-        file_name=f"coffee_assessment_data_{time.strftime('%Y%m%d_%H%M%S')}.csv",
-        mime="text/csv",
-    )
+            if rank_metrics:
+                # Calculate percentile ranks for the latest sample
+                percentile_ranks = {}
+                for metric in rank_metrics:
+                    all_values = df[metric].sort_values().values
+                    latest_value = latest_sample[metric]
+                    # Find position of the latest value
+                    percentile = sum(all_values < latest_value) / len(all_values) * 100
+                    percentile_ranks[metric] = percentile
+
+                # Create bar chart of percentiles
+                fig = px.bar(
+                    x=list(percentile_ranks.keys()),
+                    y=list(percentile_ranks.values()),
+                    labels={'x': 'Metric', 'y': 'Percentile Rank'},
+                    height=300,
+                    text=[f"{p:.1f}%" for p in percentile_ranks.values()]
+                )
+                fig.update_layout(
+                    margin=dict(l=10, r=10, t=30, b=10),
+                    title="Latest Sample Percentile Rank",
+                    yaxis=dict(range=[0, 100])
+                )
+                fig.update_traces(textposition='outside')
+
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("Key metrics not available for ranking")
+        else:
+            st.info("Need more samples for percentile ranking")
+
+    with col2:
+        # Display placeholder to avoid empty column
+        st.write("")
+
+    # RAW DATA VIEW - more compact
+    with st.expander("View Raw Data"):
+        st.markdown('<div class="dataframe-container">', unsafe_allow_html=True)
+        st.dataframe(df, use_container_width=True, height=200)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # Download button
+        st.download_button(
+            "Download CSV",
+            data=df.to_csv(index=False).encode('utf-8'),
+            file_name=f"coffee_assessment_data_{time.strftime('%Y%m%d_%H%M%S')}.csv",
+            mime="text/csv",
+        )
 
 else:
-st.warning("No data available. Please check your connection or enable Demo Mode in the sidebar.")
+    st.warning("No data available. Please check your connection or enable Demo Mode in the sidebar.")
 
 # Footer - made more compact with Rome timezone
 rome_tz = pytz.timezone('Europe/Rome')
