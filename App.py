@@ -55,18 +55,32 @@ st.markdown("""
     .css-1d391kg, .css-1lcbmhc {
         padding-top: 1rem;
     }
-    /* Slim down metric tiles */
+    /* Slim down metric tiles and make text black */
     [data-testid="stMetric"] {
         background-color: #f9f9f9;
         padding: 0.5rem;
         border-radius: 0.3rem;
         box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        color: black !important;
     }
     [data-testid="stMetric"] > div {
         font-size: 0.9rem !important;
+        color: black !important;
     }
     [data-testid="stMetric"] > div:nth-child(2) {
         font-size: 1.2rem !important;
+        color: black !important;
+    }
+    /* Make metric delta label black */
+    [data-testid="stMetricDelta"] {
+        color: black !important;
+    }
+    [data-testid="stMetricDelta"] > div {
+        color: black !important;
+    }
+    /* Ensure all text in the metrics section is black */
+    .metric-container * {
+        color: black !important;
     }
     /* Dataframe styling */
     .dataframe-container {
@@ -178,7 +192,7 @@ if not df.empty:
 
     with col1:
         # Display key metrics for the latest coffee
-        st.markdown("#### Sample #{}".format(len(df)))
+        st.markdown('<h4 style="color: black;">Sample #{}</h4>'.format(len(df)), unsafe_allow_html=True)
 
         # Compact metrics display for latest sample
         key_metrics = [
@@ -292,10 +306,10 @@ if not df.empty:
                         )
                     ),
                     showlegend=True,
-                    legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="center", x=0.5),
+                    legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
                     margin=dict(l=30, r=30, t=20, b=30),
                     height=400,
-                    font=dict(color="white")
+                    font=dict(color="black")
                 )
 
                 st.plotly_chart(fig, use_container_width=True)
