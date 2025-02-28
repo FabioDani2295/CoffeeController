@@ -217,11 +217,11 @@ if not df.empty:
                 unsafe_allow_html=True
             )
 
-    # Display coffee image if available
-    try:
-        st.image("ImageData.jpg", caption="Latest Coffee Sample Image", use_column_width=True)
-    except Exception as e:
-        st.warning(f"Coffee image not available: {e}")
+        # Display coffee image if available
+        try:
+            st.image("ImageData.jpg", caption="Latest Coffee Sample Image", use_column_width=True)
+        except Exception as e:
+            st.warning(f"Coffee image not available: {e}")
 
     with col2:
         # Create radar chart comparing latest to average of previous samples
@@ -449,37 +449,29 @@ if not df.empty:
         all_selected.extend(metrics)
 
     if len(all_selected) >= 2:
+        corr = df[all_selected].corr()
+
+        fig = px.imshow(
+            corr,
+            text_auto=True,
+            color_continuous_scale='RdBu_r',
+            zmin=-1, zmax=1,
+            height=500
+        )
+        fig.update_layout(
+            margin=dict(l=10, r=10, t=30, b=10)
+        )
+        # Make the font more readable
+        fig.update_traces(textfont=dict(size=10))
+
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("Select at least 2 metrics to view correlations")
+
+    # Create columns for percentile analysis
+    col1, col2 = st.columns(2)
 
     with col1:
-        # Correlation heatmap - smaller size
-        all_selected = []
-        for metrics in selected_metrics.values():
-            all_selected.extend(metrics)
-
-        if len(all_selected) >= 2:
-            corr = df[all_selected].corr()
-
-            # Use full width for correlation matrix
-            st.columns(1)[0].markdown("#### Correlation Matrix")
-
-            fig = px.imshow(
-                corr,
-                text_auto=True,
-                color_continuous_scale='RdBu_r',
-                zmin=-1, zmax=1,
-                height=500
-            )
-            fig.update_layout(
-                margin=dict(l=10, r=10, t=10, b=10)
-            )
-            # Make the font more readable
-            fig.update_traces(textfont=dict(size=10))
-
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.info("Select at least 2 metrics to view correlations")
-
-    with col2:
         # Latest sample percentile ranking among all samples
         if len(df) > 1:
             # Select metrics to rank
@@ -517,6 +509,10 @@ if not df.empty:
         else:
             st.info("Need more samples for percentile ranking")
 
+    with col2:
+        # Display placeholder to avoid empty column
+        st.write("")
+
     # RAW DATA VIEW - more compact
     with st.expander("View Raw Data"):
         st.markdown('<div class="dataframe-container">', unsafe_allow_html=True)
@@ -534,16 +530,12 @@ if not df.empty:
 else:
     st.warning("No data available. Please check your connection or enable Demo Mode in the sidebar.")
 
-# Footer - made more compact
-import pytz
-from datetime import datetime
-
-# Get Rome time zone
+# Footer - made more compact with Rome timezone
 rome_tz = pytz.timezone('Europe/Rome')
 rome_time = datetime.now(rome_tz).strftime('%Y-%m-%d %H:%M:%S')
 
-st.markdown("""
+st.markdown(f"""
 <div style="text-align: center; font-size: 0.8rem; margin-top: 1rem; color: #666;">
-    Last updated: {0} (Rome Time) | Total Samples: {1}
+    Last updated: {rome_time} (Rome Time) | Total Samples: {len(df)}
 </div>
-""".format(rome_time, len(df)), unsafe_allow_html=True)
+""", unsafe_allow_html=True)
