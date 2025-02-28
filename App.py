@@ -18,7 +18,12 @@ st.set_page_config(
 # Add custom CSS for a more compact design
 st.markdown("""
 <style>
-    /* More compact design */
+    /* Background for headings */
+    .stApp {
+        background-color: #1E1E1E;
+    }
+
+    /* More compact design with CamelCase */
     .main-header {
         font-size: 1.8rem;
         font-weight: bold;
@@ -219,14 +224,14 @@ if not df.empty:
 
         # Display coffee image if available
         try:
-            st.image("ImageData.jpg", caption="Latest Coffee Sample Image", use_column_width=True)
+            st.image("ImageData.jpg", caption="Latest Coffee Sample Image", use_container_width=True)
         except Exception as e:
             st.warning(f"Coffee image not available: {e}")
 
     with col2:
         # Create radar chart comparing latest to average of previous samples
         if len(df) > 1:
-            # Select metrics for radar chart (normalized)
+            # Select metrics for radar chart with exact columns as specified
             radar_metrics = [
                 "Max Temperature (°C)",
                 "PM1_0_CU",
