@@ -3,6 +3,8 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import time
+import pytz
+from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 
 # Page configuration
@@ -20,15 +22,17 @@ st.markdown("""
     .main-header {
         font-size: 1.8rem;
         font-weight: bold;
-        color: #3d2c1d;
+        color: white;
         text-align: center;
         margin-bottom: 0.5rem;
+        text-transform: capitalize;
     }
     .section-header {
-        color: #5e4632;
+        color: white;
         font-size: 1.2rem;
         margin-top: 0.5rem;
         margin-bottom: 0.3rem;
+        text-transform: capitalize;
     }
     .stPlotlyChart {
         height: auto !important;
@@ -213,15 +217,22 @@ if not df.empty:
                 unsafe_allow_html=True
             )
 
+    # Display coffee image if available
+    try:
+        st.image("ImageData.jpg", caption="Latest Coffee Sample Image", use_column_width=True)
+    except Exception as e:
+        st.warning(f"Coffee image not available: {e}")
+
     with col2:
         # Create radar chart comparing latest to average of previous samples
         if len(df) > 1:
             # Select metrics for radar chart (normalized)
             radar_metrics = [
                 "Max Temperature (°C)",
-                "Mean Temperature (°C)",
+                "PM1_0_CU",
                 "PM2_5_CU",
-                "particles_beyond_0_3",
+                "PM10_CU",
+                "Max Value",
                 "Mean_Red",
                 "Mean_Green",
                 "Mean_Blue"
@@ -278,7 +289,8 @@ if not df.empty:
                     showlegend=True,
                     legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
                     margin=dict(l=30, r=30, t=20, b=30),
-                    height=300
+                    height=400,
+                    font=dict(color="black")
                 )
 
                 st.plotly_chart(fig, use_container_width=True)
@@ -431,8 +443,12 @@ if not df.empty:
     # STATISTICAL COMPARISON
     st.markdown('<div class="section-header">Statistical Analysis</div>', unsafe_allow_html=True)
 
-    # Create columns for different statistical visualizations
-    col1, col2 = st.columns(2)
+    # Use full width for correlation matrix
+    all_selected = []
+    for metrics in selected_metrics.values():
+        all_selected.extend(metrics)
+
+    if len(all_selected) >= 2:
 
     with col1:
         # Correlation heatmap - smaller size
@@ -443,19 +459,21 @@ if not df.empty:
         if len(all_selected) >= 2:
             corr = df[all_selected].corr()
 
+            # Use full width for correlation matrix
+            st.columns(1)[0].markdown("#### Correlation Matrix")
+
             fig = px.imshow(
                 corr,
                 text_auto=True,
                 color_continuous_scale='RdBu_r',
                 zmin=-1, zmax=1,
-                height=300
+                height=500
             )
             fig.update_layout(
-                margin=dict(l=10, r=10, t=30, b=10),
-                title="Correlation Matrix"
+                margin=dict(l=10, r=10, t=10, b=10)
             )
-            # Make the font smaller
-            fig.update_traces(textfont=dict(size=8))
+            # Make the font more readable
+            fig.update_traces(textfont=dict(size=10))
 
             st.plotly_chart(fig, use_container_width=True)
         else:
@@ -517,8 +535,15 @@ else:
     st.warning("No data available. Please check your connection or enable Demo Mode in the sidebar.")
 
 # Footer - made more compact
+import pytz
+from datetime import datetime
+
+# Get Rome time zone
+rome_tz = pytz.timezone('Europe/Rome')
+rome_time = datetime.now(rome_tz).strftime('%Y-%m-%d %H:%M:%S')
+
 st.markdown("""
 <div style="text-align: center; font-size: 0.8rem; margin-top: 1rem; color: #666;">
-    Last updated: {0} | Samples: {1}
+    Last updated: {0} (Rome Time) | Total Samples: {1}
 </div>
-""".format(time.strftime('%Y-%m-%d %H:%M:%S'), len(df)), unsafe_allow_html=True)
+""".format(rome_time, len(df)), unsafe_allow_html=True)
