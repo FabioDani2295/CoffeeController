@@ -48,21 +48,16 @@ st.markdown("""
         box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         margin-bottom: 0.5rem;
     }
-    [data-testid="stMetric"] > div {
+    [data-testid="stMetric"] > div:first-child {
         font-size: 0.9rem !important;
-        color: #333 !important;
-        font-weight: bold;
+        color: #191919 !important;
+        font-weight: bold !important;
     }
     [data-testid="stMetric"] > div:nth-child(2) {
         font-size: 1.2rem !important;
         color: #000 !important;
     }
-    [data-testid="stMetricDelta"] {
-        background-color: rgba(255, 255, 255, 0.1);
-        padding: 2px 5px;
-        border-radius: 3px;
-        color: #333 !important;
-    }
+    /* Hide the delta arrows */
     [data-testid="stMetricDelta"] svg {
         display: none !important;
     }
@@ -209,12 +204,28 @@ if not df.empty:
                 if len(df) > 1:
                     avg_prev = df.iloc[:-1][col_name].mean()
                     diff = value - avg_prev
+
+                    # Set delta color based on value (not using delta_color parameter)
+                    if diff < 0:
+                        delta_style = "color: #FF4B4B !important; font-weight: bold;"  # Red for negative
+                    else:
+                        delta_style = "color: #0CBA70 !important; font-weight: bold;"  # Green for positive
+
+                    # Display metric
                     st.metric(
                         label,
                         f"{value:.1f}{unit}",
-                        f"{diff:+.1f}{unit} vs avg",
-                        delta_color="normal"
+                        f"{diff:+.1f}{unit} vs avg"
                     )
+
+                    # Override delta color with custom CSS
+                    st.markdown(f"""
+                    <style>
+                        [data-testid="stMetricDelta"] > div {{
+                            {delta_style}
+                        }}
+                    </style>
+                    """, unsafe_allow_html=True)
                 else:
                     st.metric(label, f"{value:.1f}{unit}")
 
