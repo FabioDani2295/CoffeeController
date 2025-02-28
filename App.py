@@ -7,35 +7,61 @@ from streamlit_autorefresh import st_autorefresh
 
 # Page configuration
 st.set_page_config(
-    page_title="☕ Coffee Environmental Dashboard",
+    page_title="☕ Coffee Assessment Dashboard",
     page_icon="☕",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Add custom CSS
+# Add custom CSS for a more compact design
 st.markdown("""
 <style>
+    /* More compact design */
     .main-header {
-        font-size: 2.5rem;
+        font-size: 1.8rem;
         font-weight: bold;
         color: #3d2c1d;
         text-align: center;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
     }
     .section-header {
         color: #5e4632;
-        margin-top: 1rem;
+        font-size: 1.2rem;
+        margin-top: 0.5rem;
+        margin-bottom: 0.3rem;
     }
-    .metric-container {
-        background-color: #f5f5f5;
-        border-radius: 5px;
-        padding: 1rem;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    .stPlotlyChart {
+        height: auto !important;
     }
-    .highlight {
-        color: #c25e00;
-        font-weight: bold;
+    /* Make the text smaller */
+    .small-font {
+        font-size: 0.9rem;
+    }
+    /* Reduce spacing */
+    div.block-container {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+    /* Customize sidebar */
+    .css-1d391kg, .css-1lcbmhc {
+        padding-top: 1rem;
+    }
+    /* Slim down metric tiles */
+    [data-testid="stMetric"] {
+        background-color: #f9f9f9;
+        padding: 0.5rem;
+        border-radius: 0.3rem;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    [data-testid="stMetric"] > div {
+        font-size: 0.9rem !important;
+    }
+    [data-testid="stMetric"] > div:nth-child(2) {
+        font-size: 1.2rem !important;
+    }
+    /* Dataframe styling */
+    .dataframe-container {
+        font-size: 0.8rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -48,8 +74,8 @@ def load_data():
     try:
         csv_url = f"https://raw.githubusercontent.com/FabioDani2295/CoffeeController/main/CoffeStatistics.csv?{timestamp}"
         df = pd.read_csv(csv_url)
-        # Add a sequence column for tracking measurements
-        df['Sequence'] = range(1, len(df) + 1)
+        # Add a Sample ID column for tracking
+        df['Sample ID'] = range(1, len(df) + 1)
         return df
     except Exception as e:
         st.error(f"Error loading data: {e}")
@@ -78,203 +104,421 @@ refresh_count = st_autorefresh(interval=st.session_state.refresh_rate * 1000, ke
 # Load the data
 df = load_data()
 
-# SIDEBAR
-st.sidebar.markdown("## ⚙️ Dashboard Controls")
+# SIDEBAR - Make it more compact
+with st.sidebar:
+    st.markdown("### ⚙️ Dashboard Controls")
 
-# Refresh rate control
-st.sidebar.slider(
-    "Refresh Rate (seconds)",
-    min_value=5,
-    max_value=120,
-    value=st.session_state.refresh_rate,
-    step=5,
-    key="refresh_rate_input",
-    on_change=lambda: setattr(st.session_state, 'refresh_rate', st.session_state.refresh_rate_input)
-)
-
-# Demo mode toggle
-st.sidebar.checkbox(
-    "Demo Mode (use local file)",
-    value=st.session_state.demo_mode,
-    key="demo_mode_input",
-    on_change=lambda: setattr(st.session_state, 'demo_mode', st.session_state.demo_mode_input)
-)
-
-# Organize columns by category
-column_categories = {
-    "Temperature Metrics": [col for col in df.columns if "Temperature" in col],
-    "Particulate Matter": [col for col in df.columns if "PM" in col],
-    "Particle Size Distribution": [col for col in df.columns if "particles_beyond" in col],
-    "Color Metrics": ['Mean_Red', 'Mean_Green', 'Mean_Blue', 'L*', 'a*', 'b*', 'Dist_White', 'Dist_Gray'],
-    "Value Metrics": ['Min Value', 'Max Value', 'Range', 'Mean']
-}
-
-# Sidebar metric selection
-st.sidebar.markdown("## 📊 Metric Selection")
-selected_metrics = {}
-
-# For each category, create a multiselect
-for category, columns in column_categories.items():
-    if columns:  # Only show categories with columns
-        default_selection = st.session_state.selected_metrics.get(category, columns[:2])
-        selected_metrics[category] = st.sidebar.multiselect(
-            f"Select {category}",
-            options=columns,
-            default=default_selection
-        )
-        # Update session state
-        st.session_state.selected_metrics[category] = selected_metrics[category]
-
-# MAIN DASHBOARD
-st.markdown('<div class="main-header">☕ Coffee Environmental Monitoring Dashboard</div>', unsafe_allow_html=True)
-
-# KEY METRICS ROW
-if not df.empty:
-    st.markdown("## 📈 Key Metrics")
-
-    # Create a row of metrics
-    cols = st.columns(4)
-
-    # 1. Latest Max Temperature
-    with cols[0]:
-        latest_max_temp = df['Max Temperature (°C)'].iloc[-1]
-        st.metric(
-            "Current Max Temperature",
-            f"{latest_max_temp:.1f}°C",
-            f"{latest_max_temp - df['Max Temperature (°C)'].iloc[-2]:.1f}°C" if len(df) > 1 else None
-        )
-
-    # 2. Particulate Matter
-    with cols[1]:
-        latest_pm = df['PM2_5_CU'].iloc[-1]
-        st.metric(
-            "Current PM2.5",
-            f"{latest_pm:.1f}",
-            f"{latest_pm - df['PM2_5_CU'].iloc[-2]:.1f}" if len(df) > 1 else None
-        )
-
-    # 3. Mean Color
-    with cols[2]:
-        latest_color_mean = (df['Mean_Red'].iloc[-1] + df['Mean_Green'].iloc[-1] + df['Mean_Blue'].iloc[-1]) / 3
-        st.metric(
-            "Average RGB Value",
-            f"{latest_color_mean:.1f}",
-            f"{latest_color_mean - (df['Mean_Red'].iloc[-2] + df['Mean_Green'].iloc[-2] + df['Mean_Blue'].iloc[-2]) / 3:.1f}" if len(
-                df) > 1 else None
-        )
-
-    # 4. Particles
-    with cols[3]:
-        latest_particles = df['particles_beyond_0_3'].iloc[-1]
-        st.metric(
-            "Particles > 0.3μm",
-            f"{latest_particles:.1f}",
-            f"{latest_particles - df['particles_beyond_0_3'].iloc[-2]:.1f}" if len(df) > 1 else None
-        )
-
-    # MAIN CHARTS SECTION
-    st.markdown('<div class="section-header">## 📊 Time Series Analysis</div>', unsafe_allow_html=True)
-
-    # For each category of metrics that has selections
-    for category, metrics in selected_metrics.items():
-        if metrics:  # If user selected metrics for this category
-            st.markdown(f"### {category}")
-
-            # Create a line chart for time series
-            fig = go.Figure()
-
-            for metric in metrics:
-                fig.add_trace(go.Scatter(
-                    x=df['Sequence'],
-                    y=df[metric],
-                    mode='lines+markers',
-                    name=metric
-                ))
-
-            fig.update_layout(
-                height=400,
-                margin=dict(l=20, r=20, t=40, b=20),
-                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-                xaxis_title="Sequence",
-                yaxis_title="Value",
-                hovermode="x unified"
-            )
-
-            st.plotly_chart(fig, use_container_width=True)
-
-    # CORRELATION HEATMAP
-    st.markdown("### 🔄 Correlation Analysis")
-
-    # Flatten the selected metrics
-    all_selected_metrics = []
-    for metrics in selected_metrics.values():
-        all_selected_metrics.extend(metrics)
-
-    # If we have at least 2 metrics selected
-    if len(all_selected_metrics) >= 2:
-        correlation = df[all_selected_metrics].corr()
-
-        fig = px.imshow(
-            correlation,
-            text_auto=True,
-            color_continuous_scale='RdBu_r',
-            zmin=-1, zmax=1,
-            aspect="auto"
-        )
-        fig.update_layout(height=500)
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.info("Select at least 2 metrics to view correlation analysis")
-
-    # 3D VISUALIZATION FOR COLOR
-    st.markdown("### 🎨 RGB Color Visualization")
-    if all(col in df.columns for col in ['Mean_Red', 'Mean_Green', 'Mean_Blue']):
-        fig = go.Figure(data=[go.Scatter3d(
-            x=df['Mean_Red'],
-            y=df['Mean_Green'],
-            z=df['Mean_Blue'],
-            mode='markers',
-            marker=dict(
-                size=8,
-                color=[f'rgb({r},{g},{b})' for r, g, b in zip(
-                    df['Mean_Red'],
-                    df['Mean_Green'],
-                    df['Mean_Blue']
-                )],
-                opacity=0.8
-            )
-        )])
-
-        fig.update_layout(
-            scene=dict(
-                xaxis_title='Red',
-                yaxis_title='Green',
-                zaxis_title='Blue'
-            ),
-            height=600
-        )
-
-        st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.info("RGB color data not available")
-
-    # DATA DOWNLOAD
-    st.markdown("### 📥 Data Export")
-    st.download_button(
-        label="Download Data as CSV",
-        data=df.to_csv(index=False).encode('utf-8'),
-        file_name=f'coffee_environmental_data_{time.strftime("%Y%m%d_%H%M%S")}.csv',
-        mime='text/csv',
+    # Refresh rate control
+    st.slider(
+        "Refresh Rate (sec)",
+        min_value=5,
+        max_value=120,
+        value=st.session_state.refresh_rate,
+        step=5,
+        key="refresh_rate_input",
+        on_change=lambda: setattr(st.session_state, 'refresh_rate', st.session_state.refresh_rate_input)
     )
 
-    # RAW DATA SECTION
-    with st.expander("📋 View Raw Data"):
-        st.dataframe(df)
+    # Demo mode toggle
+    st.checkbox(
+        "Demo Mode",
+        value=st.session_state.demo_mode,
+        key="demo_mode_input",
+        on_change=lambda: setattr(st.session_state, 'demo_mode', st.session_state.demo_mode_input),
+        help="Use local data if online source unavailable"
+    )
+
+    # Organize columns by category
+    column_categories = {
+        "Temperature": [col for col in df.columns if "Temperature" in col],
+        "Particulate Matter": [col for col in df.columns if "PM" in col],
+        "Particles": [col for col in df.columns if "particles_beyond" in col],
+        "Color": ['Mean_Red', 'Mean_Green', 'Mean_Blue', 'L*', 'a*', 'b*', 'Dist_White', 'Dist_Gray'],
+        "Values": ['Min Value', 'Max Value', 'Range', 'Mean']
+    }
+
+    # Sidebar metric selection
+    st.markdown("### 📊 Metrics")
+    selected_metrics = {}
+
+    # For each category, create a multiselect with smaller height
+    for category, columns in column_categories.items():
+        if columns:  # Only show categories with columns
+            default_selection = st.session_state.selected_metrics.get(category, columns[:2])
+            selected_metrics[category] = st.multiselect(
+                f"{category}",
+                options=columns,
+                default=default_selection,
+                key=f"select_{category}"
+            )
+            # Update session state
+            st.session_state.selected_metrics[category] = selected_metrics[category]
+
+# MAIN DASHBOARD
+st.markdown('<div class="main-header">☕ Coffee Assessment Analysis</div>', unsafe_allow_html=True)
+
+# LATEST COFFEE SAMPLE COMPARISON
+if not df.empty:
+    # Get the latest coffee sample (last row) and previous samples
+    latest_sample = df.iloc[-1]
+
+    st.markdown('<div class="section-header">Latest Coffee Sample Assessment</div>', unsafe_allow_html=True)
+
+    # Create two columns - latest coffee metrics and comparison
+    col1, col2 = st.columns([1, 2])
+
+    with col1:
+        # Display key metrics for the latest coffee
+        st.markdown("#### Sample #{}".format(len(df)))
+
+        # Compact metrics display for latest sample
+        key_metrics = [
+            ("Max Temp", "Max Temperature (°C)", "°C"),
+            ("Mean Temp", "Mean Temperature (°C)", "°C"),
+            ("PM2.5", "PM2_5_CU", ""),
+            ("Particles >0.3μm", "particles_beyond_0_3", "")
+        ]
+
+        for label, col_name, unit in key_metrics:
+            if col_name in df.columns:
+                value = latest_sample[col_name]
+                # Calculate comparison with average of all previous samples
+                if len(df) > 1:
+                    avg_prev = df.iloc[:-1][col_name].mean()
+                    diff = value - avg_prev
+                    st.metric(
+                        label,
+                        f"{value:.1f}{unit}",
+                        f"{diff:+.1f}{unit} vs avg",
+                        delta_color="normal"
+                    )
+                else:
+                    st.metric(label, f"{value:.1f}{unit}")
+
+        # Add RGB color display if available
+        if all(col in df.columns for col in ['Mean_Red', 'Mean_Green', 'Mean_Blue']):
+            r, g, b = int(latest_sample['Mean_Red']), int(latest_sample['Mean_Green']), int(latest_sample['Mean_Blue'])
+            st.markdown(
+                f"""
+                <div style="
+                    width: 100%; 
+                    height: 30px; 
+                    background-color: rgb({r},{g},{b}); 
+                    border-radius: 5px;
+                    margin-top: 10px;
+                    margin-bottom: 5px;
+                "></div>
+                <div class="small-font">RGB: {r}, {g}, {b}</div>
+                """,
+                unsafe_allow_html=True
+            )
+
+    with col2:
+        # Create radar chart comparing latest to average of previous samples
+        if len(df) > 1:
+            # Select metrics for radar chart (normalized)
+            radar_metrics = [
+                "Max Temperature (°C)",
+                "Mean Temperature (°C)",
+                "PM2_5_CU",
+                "particles_beyond_0_3",
+                "Mean_Red",
+                "Mean_Green",
+                "Mean_Blue"
+            ]
+
+            # Filter to metrics that exist in the dataframe
+            radar_metrics = [m for m in radar_metrics if m in df.columns]
+
+            if radar_metrics:
+                # Calculate the average of previous samples
+                avg_previous = df.iloc[:-1][radar_metrics].mean()
+
+                # Normalize the data for better visualization
+                max_values = df[radar_metrics].max()
+                min_values = df[radar_metrics].min()
+
+                # Avoid division by zero
+                range_values = max_values - min_values
+                range_values = range_values.replace(0, 1)  # Replace zeros with 1 to avoid division by zero
+
+                # Normalize latest and average values
+                latest_normalized = (latest_sample[radar_metrics] - min_values) / range_values
+                avg_normalized = (avg_previous - min_values) / range_values
+
+                # Create radar chart
+                fig = go.Figure()
+
+                # Add trace for average previous
+                fig.add_trace(go.Scatterpolar(
+                    r=avg_normalized.values,
+                    theta=radar_metrics,
+                    fill='toself',
+                    name='Average Previous',
+                    line=dict(color='rgba(135, 206, 250, 0.7)'),
+                ))
+
+                # Add trace for latest sample
+                fig.add_trace(go.Scatterpolar(
+                    r=latest_normalized.values,
+                    theta=radar_metrics,
+                    fill='toself',
+                    name='Latest Sample',
+                    line=dict(color='rgba(255, 99, 71, 0.8)'),
+                ))
+
+                # Update layout
+                fig.update_layout(
+                    polar=dict(
+                        radialaxis=dict(
+                            visible=True,
+                            range=[0, 1]
+                        )
+                    ),
+                    showlegend=True,
+                    legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
+                    margin=dict(l=30, r=30, t=20, b=30),
+                    height=300
+                )
+
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("Insufficient metrics available for comparison")
+        else:
+            st.info("Only one sample available. More samples needed for comparison.")
+
+    # HISTORICAL TRENDS
+    st.markdown('<div class="section-header">Historical Sample Analysis</div>', unsafe_allow_html=True)
+
+    # Create tabs for different categories of metrics
+    tabs = st.tabs([
+        "Temperature",
+        "Particulate",
+        "Color",
+        "Particles",
+        "Values"
+    ])
+
+    # Temperature tab
+    with tabs[0]:
+        temp_metrics = selected_metrics.get("Temperature", [])
+        if temp_metrics:
+            fig = px.line(
+                df,
+                x="Sample ID",
+                y=temp_metrics,
+                markers=True,
+                line_shape="spline",
+                height=280
+            )
+            fig.update_layout(
+                legend=dict(orientation="h", yanchor="bottom", y=-0.5, xanchor="center", x=0.5),
+                margin=dict(l=20, r=20, t=10, b=40),
+                xaxis=dict(tickmode='linear', dtick=1)
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Select temperature metrics in the sidebar")
+
+    # Particulate tab
+    with tabs[1]:
+        pm_metrics = selected_metrics.get("Particulate Matter", [])
+        if pm_metrics:
+            fig = px.line(
+                df,
+                x="Sample ID",
+                y=pm_metrics,
+                markers=True,
+                line_shape="spline",
+                height=280
+            )
+            fig.update_layout(
+                legend=dict(orientation="h", yanchor="bottom", y=-0.5, xanchor="center", x=0.5),
+                margin=dict(l=20, r=20, t=10, b=40),
+                xaxis=dict(tickmode='linear', dtick=1)
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Select particulate metrics in the sidebar")
+
+    # Color tab
+    with tabs[2]:
+        color_metrics = selected_metrics.get("Color", [])
+        if color_metrics and 'Mean_Red' in df.columns and 'Mean_Green' in df.columns and 'Mean_Blue' in df.columns:
+            col1, col2 = st.columns([3, 1])
+
+            with col1:
+                # Line chart for selected color metrics
+                fig = px.line(
+                    df,
+                    x="Sample ID",
+                    y=color_metrics,
+                    markers=True,
+                    line_shape="spline",
+                    height=280
+                )
+                fig.update_layout(
+                    legend=dict(orientation="h", yanchor="bottom", y=-0.5, xanchor="center", x=0.5),
+                    margin=dict(l=20, r=20, t=10, b=40),
+                    xaxis=dict(tickmode='linear', dtick=1)
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
+            with col2:
+                # Color swatches for all samples
+                st.markdown("#### Color Swatches")
+                for i in range(len(df)):
+                    r, g, b = int(df.iloc[i]['Mean_Red']), int(df.iloc[i]['Mean_Green']), int(df.iloc[i]['Mean_Blue'])
+                    sample_id = i + 1
+                    st.markdown(
+                        f"""
+                        <div style="display: flex; align-items: center; margin-bottom: 5px; font-size: 0.8rem;">
+                            <div style="flex: 0 0 20px; margin-right: 5px;">#{sample_id}</div>
+                            <div style="
+                                flex: 1;
+                                height: 15px; 
+                                background-color: rgb({r},{g},{b}); 
+                                border-radius: 3px;
+                            "></div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+        else:
+            st.info("Select color metrics in the sidebar")
+
+    # Particles tab
+    with tabs[3]:
+        particles_metrics = selected_metrics.get("Particles", [])
+        if particles_metrics:
+            fig = px.bar(
+                df,
+                x="Sample ID",
+                y=particles_metrics,
+                barmode="group",
+                height=280
+            )
+            fig.update_layout(
+                legend=dict(orientation="h", yanchor="bottom", y=-0.5, xanchor="center", x=0.5),
+                margin=dict(l=20, r=20, t=10, b=40),
+                xaxis=dict(tickmode='linear', dtick=1)
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Select particle metrics in the sidebar")
+
+    # Values tab
+    with tabs[4]:
+        values_metrics = selected_metrics.get("Values", [])
+        if values_metrics:
+            fig = px.line(
+                df,
+                x="Sample ID",
+                y=values_metrics,
+                markers=True,
+                line_shape="spline",
+                height=280
+            )
+            fig.update_layout(
+                legend=dict(orientation="h", yanchor="bottom", y=-0.5, xanchor="center", x=0.5),
+                margin=dict(l=20, r=20, t=10, b=40),
+                xaxis=dict(tickmode='linear', dtick=1)
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Select value metrics in the sidebar")
+
+    # STATISTICAL COMPARISON
+    st.markdown('<div class="section-header">Statistical Analysis</div>', unsafe_allow_html=True)
+
+    # Create columns for different statistical visualizations
+    col1, col2 = st.columns(2)
+
+    with col1:
+        # Correlation heatmap - smaller size
+        all_selected = []
+        for metrics in selected_metrics.values():
+            all_selected.extend(metrics)
+
+        if len(all_selected) >= 2:
+            corr = df[all_selected].corr()
+
+            fig = px.imshow(
+                corr,
+                text_auto=True,
+                color_continuous_scale='RdBu_r',
+                zmin=-1, zmax=1,
+                height=300
+            )
+            fig.update_layout(
+                margin=dict(l=10, r=10, t=30, b=10),
+                title="Correlation Matrix"
+            )
+            # Make the font smaller
+            fig.update_traces(textfont=dict(size=8))
+
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Select at least 2 metrics to view correlations")
+
+    with col2:
+        # Latest sample percentile ranking among all samples
+        if len(df) > 1:
+            # Select metrics to rank
+            rank_metrics = ["Max Temperature (°C)", "PM2_5_CU", "particles_beyond_0_3"]
+            rank_metrics = [m for m in rank_metrics if m in df.columns]
+
+            if rank_metrics:
+                # Calculate percentile ranks for the latest sample
+                percentile_ranks = {}
+                for metric in rank_metrics:
+                    all_values = df[metric].sort_values().values
+                    latest_value = latest_sample[metric]
+                    # Find position of the latest value
+                    percentile = sum(all_values < latest_value) / len(all_values) * 100
+                    percentile_ranks[metric] = percentile
+
+                # Create bar chart of percentiles
+                fig = px.bar(
+                    x=list(percentile_ranks.keys()),
+                    y=list(percentile_ranks.values()),
+                    labels={'x': 'Metric', 'y': 'Percentile Rank'},
+                    height=300,
+                    text=[f"{p:.1f}%" for p in percentile_ranks.values()]
+                )
+                fig.update_layout(
+                    margin=dict(l=10, r=10, t=30, b=10),
+                    title="Latest Sample Percentile Rank",
+                    yaxis=dict(range=[0, 100])
+                )
+                fig.update_traces(textposition='outside')
+
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("Key metrics not available for ranking")
+        else:
+            st.info("Need more samples for percentile ranking")
+
+    # RAW DATA VIEW - more compact
+    with st.expander("View Raw Data"):
+        st.markdown('<div class="dataframe-container">', unsafe_allow_html=True)
+        st.dataframe(df, use_container_width=True, height=200)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # Download button
+        st.download_button(
+            "Download CSV",
+            data=df.to_csv(index=False).encode('utf-8'),
+            file_name=f"coffee_assessment_data_{time.strftime('%Y%m%d_%H%M%S')}.csv",
+            mime="text/csv",
+        )
 
 else:
     st.warning("No data available. Please check your connection or enable Demo Mode in the sidebar.")
 
-# Footer
-st.markdown("---")
-st.markdown(f"🕒 **Last updated:** {time.strftime('%Y-%m-%d %H:%M:%S')} | Data points: {len(df)}")
-st.markdown("Developed with ❤️ for Coffee Environmental Monitoring")
+# Footer - made more compact
+st.markdown("""
+<div style="text-align: center; font-size: 0.8rem; margin-top: 1rem; color: #666;">
+    Last updated: {0} | Samples: {1}
+</div>
+""".format(time.strftime('%Y-%m-%d %H:%M:%S'), len(df)), unsafe_allow_html=True)
