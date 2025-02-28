@@ -292,7 +292,7 @@ if not df.empty:
                         )
                     ),
                     showlegend=True,
-                    legend=dict(orientation="h", yanchor="bottom", y=-0.5, xanchor="center", x=0.5),
+                    legend=dict(orientation="h", yanchor="bottom", y=-0.3, xanchor="center", x=0.5),
                     margin=dict(l=30, r=30, t=20, b=30),
                     height=400,
                     font=dict(color="white")
