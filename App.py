@@ -312,7 +312,7 @@ if not df.empty:
                     showlegend=True,
                     legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
                     margin=dict(l=30, r=30, t=20, b=30),
-                    height=450,
+                    height=440,
                     font=dict(color="black")
                 )
 
