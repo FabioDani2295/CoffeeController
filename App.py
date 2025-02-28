@@ -1,13 +1,3 @@
-# Add CSS to handle global styling issues
-st.markdown("""
-    <style>
-        /* Force all metric labels to be black */
-        [data-testid="stMetric"] > div:first-child {
-            color: black !important;
-            font-weight: bold !important;
-        }
-    </style>
-    """, unsafe_allow_html=True)
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -206,7 +196,7 @@ if not df.empty:
     # Create a row of metrics
     metric_cols = st.columns(len(key_metrics))
 
-    # Add CSS to handle global styling issues
+    # Force labels to be black (global fix)
     st.markdown("""
     <style>
         /* Force all metric labels to be black */
@@ -223,34 +213,34 @@ if not df.empty:
                 value = latest_sample[col_name]
                 # Calculate comparison with average of all previous samples
                 if len(df) > 1:
-                    # Set delta color based on value (not using delta_color parameter)
-                    if diff < 0:
-                        delta_style = "color: #FF4B4B !important; font-weight: bold;"  # Red for negative
-                    else:
-                        delta_style = "color: #0CBA70 !important; font-weight: bold;"  # Green for positive
+                    avg_prev = df.iloc[:-1][col_name].mean()
+                    diff = value - avg_prev
 
                     # Display metric
-                    metric = st.metric(
+                    st.metric(
                         label,
                         f"{value:.1f}{unit}",
                         f"{diff:+.1f}{unit} vs avg"
                     )
 
-                    # Generate a unique key for this specific metric
-                    metric_id = f"metric_{i}_{col_name.replace(' ', '_').replace('(', '').replace(')', '').replace('.', '_')}"
+                    # Apply color based on whether diff is positive or negative
+                    if diff < 0:
+                        color = "#FF4B4B"  # Red for negative
+                    else:
+                        color = "#0CBA70"  # Green for positive
 
-                    # Override delta color with custom CSS using the unique ID
+                    # Apply custom styling to ensure colors work
                     st.markdown(f"""
                     <style>
-                        /* Force label to be black */
-                        [data-testid="stMetric"] > div:first-child {{
+                        /* This ensures metric label is black */
+                        div.stMetric:nth-child({i + 1}) > div:first-child {{
                             color: black !important;
-                            font-weight: bold !important;
                         }}
 
-                        /* Style for this specific comparison value */
-                        [data-testid="stMetricDelta"] > div {{
-                            {delta_style}
+                        /* This colors the delta value */
+                        div.stMetric:nth-child({i + 1}) [data-testid="stMetricDelta"] > div {{
+                            color: {color} !important;
+                            font-weight: bold !important;
                         }}
                     </style>
                     """, unsafe_allow_html=True)
@@ -351,7 +341,7 @@ if not df.empty:
                     showlegend=True,
                     legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
                     margin=dict(l=30, r=30, t=20, b=30),
-                    height=440,
+                    height=450,
                     font=dict(color="black")
                 )
 
