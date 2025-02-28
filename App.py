@@ -331,7 +331,7 @@ if not df.empty:
                     legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
                     margin=dict(l=30, r=30, t=20, b=30),
                     height=440,
-                    font=dict(color="black")
+                    font=dict(color="white")
                 )
 
                 st.plotly_chart(fig, use_container_width=True)
