@@ -16,19 +16,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-st.markdown("""
-    <style>
-        /* Cambia il colore del testo delle metriche in nero */
-        div[data-testid="stMetricLabel"] {
-            color: black !important;
-            font-weight: bold;
-        }
-        div[data-testid="stMetricValue"] {
-            color: black !important;
-            font-weight: bold;
-        }
-    </style>
-    """, unsafe_allow_html=True)
 
 # Add custom CSS for a more compact design
 st.markdown("""
