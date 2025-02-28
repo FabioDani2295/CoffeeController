@@ -490,7 +490,7 @@ if not df.empty:
             text_auto=True,
             color_continuous_scale='RdBu_r',
             zmin=-1, zmax=1,
-            height=500
+            height=600
         )
         fig.update_layout(
             margin=dict(l=10, r=10, t=30, b=10)
