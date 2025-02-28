@@ -179,6 +179,7 @@ with st.sidebar:
                 key=f"select_{category}"
             )
             # Update session state
+            #okok
             st.session_state.selected_metrics[category] = selected_metrics[category]
 
 # MAIN DASHBOARD
