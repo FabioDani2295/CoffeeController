@@ -242,20 +242,31 @@ if __name__ == "__main__":
         # Recupera l'ultimo campione (ultima riga) e i campioni precedenti
         latest_sample = df.iloc[-1]
 
-        st.markdown('<div class="section-header">Latest coffee assessment</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Latest Coffee Assessment</div>', unsafe_allow_html=True)
 
         # Visualizzazione del Sample ID
         st.markdown(
-            '<h4 style="color: blue; background-color: #333; padding: 5px; border-radius: 2px;">Sample #{}</h4>'.format(
+            '<h4 style="color: white; background-color: #333; padding: 5px; border-radius: 5px;">Sample #{}</h4>'.format(
                 len(df)), unsafe_allow_html=True)
 
-        # Visualizzazione compatta delle metriche per l'ultimo campione
+        # Updated key metrics to match radar chart metrics
         key_metrics = [
             ("Max Temp", "Max Temperature (°C)", "°C"),
-            ("Mean Temp", "Mean Temperature (°C)", "°C"),
+            ("PM1.0", "PM1_0_CU", ""),
             ("PM2.5", "PM2_5_CU", ""),
-            ("Particles >0.3μm", "particles_beyond_0_3", "")
+            ("Avg Weight", "Average Weight", "g")
         ]
+
+        # Add color metrics (check both uppercase and lowercase versions)
+        if "Mean_H" in df.columns:
+            key_metrics.append(("Hue", "Mean_H", ""))
+        elif "mean_H" in df.columns:
+            key_metrics.append(("Hue", "mean_H", ""))
+
+        if "Mean_S" in df.columns:
+            key_metrics.append(("Saturation", "Mean_S", ""))
+        elif "mean_S" in df.columns:
+            key_metrics.append(("Saturation", "mean_S", ""))
 
         # Creazione di una riga di metriche
         metric_cols = st.columns(len(key_metrics))
@@ -267,6 +278,7 @@ if __name__ == "__main__":
                     if len(df) > 1:
                         avg_prev = df.iloc[:-1][col_name].mean()
                         diff = value - avg_prev
+                        # Determine color based on value change (may need adjustment for some metrics where lower is better)
                         if diff < 0:
                             diff_html = f'<span style="color: #ff4b4b; font-weight: bold;">{diff:+.1f}{unit} vs avg</span>'
                         else:
