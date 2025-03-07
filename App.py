@@ -15,7 +15,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-
 # Unified CSS injection function
 def inject_css():
     st.markdown("""
@@ -261,29 +260,60 @@ if __name__ == "__main__":
         elif "mean_S" in df.columns:
             key_metrics.append(("Saturation", "mean_S", ""))
 
-        # Creazione di una riga di metriche
-        metric_cols = st.columns(len(key_metrics))
+        # Create a custom HTML card layout for the metrics instead of using st.metric
+        html_cards = []
 
-        for i, (label, col_name, unit) in enumerate(key_metrics):
+        for label, col_name, unit in key_metrics:
             if col_name in df.columns:
-                with metric_cols[i]:
-                    value = latest_sample[col_name]
-                    if len(df) > 1:
-                        avg_prev = df.iloc[:-1][col_name].mean()
-                        diff = value - avg_prev
-                        # Determine color based on value change (may need adjustment for some metrics where lower is better)
-                        if diff < 0:
-                            diff_html = f'<span style="color: #ff4b4b; font-weight: bold;">{diff:+.1f}{unit} vs avg</span>'
-                        else:
-                            diff_html = f'<span style="color: #28a745; font-weight: bold;">{diff:+.1f}{unit} vs avg</span>'
-                        st.metric(
-                            label,
-                            f"{value:.1f}{unit}",
-                            delta=None
-                        )
-                        st.markdown(diff_html, unsafe_allow_html=True)
-                    else:
-                        st.metric(label, f"{value:.1f}{unit}")
+                value = latest_sample[col_name]
+
+                if len(df) > 1:
+                    avg_prev = df.iloc[:-1][col_name].mean()
+                    diff = value - avg_prev
+                    diff_text = f"{diff:+.1f}{unit}"
+
+                    # Color for the difference
+                    diff_color = "#ff4b4b" if diff < 0 else "#28a745"
+
+                    # Create a card HTML
+                    card_html = f"""
+                    <div style="background-color: white; padding: 10px; border-radius: 5px; margin: 5px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="font-size: 0.9rem; font-weight: bold; color: black; margin-bottom: 5px; background-color: #f0f0f0; padding: 3px; border-radius: 3px;">{label}</div>
+                        <div style="font-size: 1.2rem; font-weight: bold; color: black;">{value:.1f}{unit}</div>
+                        <div style="font-size: 0.8rem; color: {diff_color}; font-weight: bold;">{diff_text} vs avg</div>
+                    </div>
+                    """
+                else:
+                    # Create a card HTML without comparison
+                    card_html = f"""
+                    <div style="background-color: white; padding: 10px; border-radius: 5px; margin: 5px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="font-size: 0.9rem; font-weight: bold; color: black; margin-bottom: 5px; background-color: #f0f0f0; padding: 3px; border-radius: 3px;">{label}</div>
+                        <div style="font-size: 1.2rem; font-weight: bold; color: black;">{value:.1f}{unit}</div>
+                    </div>
+                    """
+
+                html_cards.append(card_html)
+
+        # Calculate number of cards per row (based on screen size)
+        num_metrics = len(html_cards)
+        cards_per_row = min(num_metrics, 6)  # Maximum 6 cards per row
+
+        # Create rows of cards
+        rows = []
+        for i in range(0, num_metrics, cards_per_row):
+            row_cards = html_cards[i:i + cards_per_row]
+            card_width = 100 / len(row_cards)
+
+            row_html = f"""
+            <div style="display: flex; flex-wrap: wrap; margin: -5px;">
+                {"".join([f'<div style="flex: 0 0 {card_width}%; padding: 5px;">{card}</div>' for card in row_cards])}
+            </div>
+            """
+            rows.append(row_html)
+
+        # Combine all rows and display
+        st.markdown("".join(rows), unsafe_allow_html=True)
+
 
         # Creazione di due colonne per immagine/color e grafico radar
         col1, col2 = st.columns([1, 2])
