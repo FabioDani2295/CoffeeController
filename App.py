@@ -302,7 +302,7 @@ if __name__ == "__main__":
                     unsafe_allow_html=True
                 )
             try:
-                st.image("ImageData.jpg", caption="Latest Coffee Sample Image", use_container_width=True)
+                st.image("ImageData.jpg", use_container_width=True)
             except Exception as e:
                 st.warning(f"Coffee image not available: {e}")
 
