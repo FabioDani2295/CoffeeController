@@ -306,28 +306,42 @@ if __name__ == "__main__":
             except Exception as e:
                 st.warning(f"Coffee image not available: {e}")
 
+        # Replace the existing radar chart code in the with col2: section
         with col2:
             if len(df) > 1:
+                # Exactly the metrics you requested
                 radar_metrics = [
                     "Max Temperature (°C)",
                     "PM1_0_CU",
                     "PM2_5_CU",
-                    "PM10_CU",
-                    "Max Value",
-                    "Mean_Red",
-                    "Mean_Green",
-                    "Mean_Blue"
+                    "Average Weight",
+                    "Mean_H",
+                    "Mean_S"
                 ]
+
+                # Filter to only metrics that exist in the dataframe
                 radar_metrics = [m for m in radar_metrics if m in df.columns]
+
                 if radar_metrics:
+                    # Calculate statistics for normalization
                     avg_previous = df.iloc[:-1][radar_metrics].mean()
+
+                    # Get min and max values for scaling per metric
                     max_values = df[radar_metrics].max()
                     min_values = df[radar_metrics].min()
+
+                    # Calculate range while avoiding division by zero
                     range_values = max_values - min_values
-                    range_values = range_values.replace(0, 1)
+                    range_values = range_values.replace(0, 1)  # Avoid division by zero
+
+                    # Normalize values to 0-1 scale (0-100%)
                     latest_normalized = (latest_sample[radar_metrics] - min_values) / range_values
                     avg_normalized = (avg_previous - min_values) / range_values
+
+                    # Create radar chart
                     fig = go.Figure()
+
+                    # Add average of previous samples
                     fig.add_trace(go.Scatterpolar(
                         r=avg_normalized.values,
                         theta=radar_metrics,
@@ -335,6 +349,8 @@ if __name__ == "__main__":
                         name='Average Previous',
                         line=dict(color='rgba(135, 206, 250, 0.7)'),
                     ))
+
+                    # Add latest sample
                     fig.add_trace(go.Scatterpolar(
                         r=latest_normalized.values,
                         theta=radar_metrics,
@@ -342,26 +358,35 @@ if __name__ == "__main__":
                         name='Latest Sample',
                         line=dict(color='rgba(255, 99, 71, 0.8)'),
                     ))
+
+                    # Update layout with simplified settings
                     fig.update_layout(
                         polar=dict(
                             radialaxis=dict(
                                 visible=True,
-                                range=[0, 1]
+                                range=[0, 1],
+                                tickvals=[0, 0.25, 0.5, 0.75, 1],
+                                ticktext=['0%', '25%', '50%', '75%', '100%']
                             )
                         ),
-                        showlegend=True,
-                        legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5),
+                        showlegend=False,  # No legend as requested
                         margin=dict(l=30, r=30, t=20, b=30),
                         height=440,
                         font=dict(color="white")
                     )
+
                     st.plotly_chart(fig, use_container_width=True)
+
+                    # Add a simple note about normalization
+                    st.markdown("""
+                    <div style="background-color: rgba(50, 50, 50, 0.7); padding: 8px; border-radius: 5px; font-size: 0.8rem; color: white; margin-top: -15px; text-align: center;">
+                    Each axis normalized 0-100% for proper comparison
+                    </div>
+                    """, unsafe_allow_html=True)
                 else:
-                    st.info("Insufficient metrics available for comparison")
+                    st.info("Some of the requested metrics are not available in the data")
             else:
                 st.info("Only one sample available. More samples needed for comparison.")
-
-        st.markdown('<div class="section-header">Historical Sample Analysis</div>', unsafe_allow_html=True)
 
         tabs = st.tabs([
             "Temperature",
