@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 import time
 import pytz
 from datetime import datetime
-from streamlit_autorefresh import st_autorefresh
+import threading
 
 # Configurazione della pagina: DEVE ESSERE LA PRIMA chiamata Streamlit
 st.set_page_config(
@@ -203,8 +203,31 @@ if __name__ == "__main__":
     if 'demo_mode' not in st.session_state:
         st.session_state.demo_mode = False
 
-    # Auto-refresh basato sullo stato di sessione
-    refresh_count = st_autorefresh(interval=st.session_state.refresh_rate * 1000, key="data_refresh")
+    # Built-in auto-refresh implementation
+    if 'last_refresh' not in st.session_state:
+        st.session_state.last_refresh = time.time()
+
+    # Check if it's time to refresh
+    current_time = time.time()
+    time_elapsed = current_time - st.session_state.last_refresh
+
+    # Create a refresh progress indicator
+    refresh_col1, refresh_col2 = st.sidebar.columns([3, 1])
+    with refresh_col1:
+        refresh_progress = st.progress(min(1.0, time_elapsed / (st.session_state.refresh_rate)))
+    with refresh_col2:
+        seconds_left = max(0, st.session_state.refresh_rate - time_elapsed)
+        st.write(f"{int(seconds_left)}s")
+
+    # Manual refresh button
+    if st.sidebar.button("🔄 Refresh Now", use_container_width=True):
+        st.session_state.last_refresh = current_time
+        st.experimental_rerun()
+
+    # Auto refresh when time is up
+    if time_elapsed >= st.session_state.refresh_rate:
+        st.session_state.last_refresh = current_time
+        st.experimental_rerun()
 
     # Caricamento dei dati
     df = load_data()
