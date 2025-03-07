@@ -105,6 +105,34 @@ def inject_compact_css():
         .dataframe-container {
             font-size: 0.8rem;
         }
+        /* Comparison metrics */
+        .comparison-card {
+            background-color: white;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .comparison-value {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            padding: 4px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .comparison-header {
+            font-weight: bold;
+            color: black;
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+        .value-higher {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .value-lower {
+            color: #ff4b4b;
+            font-weight: bold;
+        }
     </style>
     """, unsafe_allow_html=True)
 
@@ -164,8 +192,9 @@ if __name__ == "__main__":
         st.session_state.selected_metrics = {
             'temperature': ['Max Temperature (°C)', 'Mean Temperature (°C)'],
             'particulate': ['PM1_0_CU', 'PM2_5_CU', 'PM10_CU'],
-            'color': ['Mean_Red', 'Mean_Green', 'Mean_Blue'],
-            'particles': ['particles_beyond_0_3', 'particles_beyond_1_0']
+            'color': ['Mean_Red', 'Mean_Green', 'Mean_Blue', 'Mean_H', 'Mean_S'],
+            'particles': ['particles_beyond_0_3', 'particles_beyond_1_0'],
+            'weight': ['Average Weight', 'Min Weight', 'Max Weight']
         }
 
     if 'refresh_rate' not in st.session_state:
@@ -223,7 +252,7 @@ if __name__ == "__main__":
             available_columns = [col for col in columns if col in df.columns]
             if available_columns:  # Mostra solo le categorie con colonne
                 default_selection = [col for col in
-                                     st.session_state.selected_metrics.get(category, available_columns[:2]) if
+                                     st.session_state.selected_metrics.get(category.lower(), available_columns[:2]) if
                                      col in available_columns]
                 selected_metrics[category] = st.multiselect(
                     f"{category}",
@@ -232,7 +261,7 @@ if __name__ == "__main__":
                     key=f"select_{category}"
                 )
                 # Aggiorna lo stato di sessione
-                st.session_state.selected_metrics[category] = selected_metrics[category]
+                st.session_state.selected_metrics[category.lower()] = selected_metrics[category]
 
     # DASHBOARD PRINCIPALE
     st.markdown('<div class="main-header">☕ Coffee Assessment Analysis</div>', unsafe_allow_html=True)
@@ -306,55 +335,161 @@ if __name__ == "__main__":
             except Exception as e:
                 st.warning(f"Coffee image not available: {e}")
 
+            # Add comparison metrics
+            st.markdown('<div class="comparison-header" style="color: white;">Comparison to Average</div>',
+                        unsafe_allow_html=True)
+            comparison_metrics = [
+                ("Max Temperature (°C)", "°C"),
+                ("PM1_0_CU", ""),
+                ("PM2_5_CU", ""),
+                ("Average Weight", "g"),
+                ("Mean_H", "°"),
+                ("Mean_S", "%")
+            ]
+
+            st.markdown('<div class="comparison-card">', unsafe_allow_html=True)
+            st.markdown('<div class="comparison-header">Latest vs Average</div>', unsafe_allow_html=True)
+
+            for metric, unit in comparison_metrics:
+                if metric in df.columns:
+                    latest_val = latest_sample[metric]
+                    if len(df) > 1:
+                        avg_val = df.iloc[:-1][metric].mean()
+                        diff = latest_val - avg_val
+                        diff_pct = (diff / avg_val) * 100 if avg_val != 0 else 0
+
+                        # Determine if higher is better (customize this based on your preferences)
+                        if metric in ["Average Weight", "Mean_H"]:
+                            is_better = diff > 0
+                        elif metric in ["PM1_0_CU", "PM2_5_CU"]:
+                            is_better = diff < 0
+                        else:
+                            is_better = diff > 0
+
+                        value_class = "value-higher" if is_better else "value-lower"
+
+                        st.markdown(
+                            f"""
+                            <div class="comparison-value">
+                                <span>{metric.replace('_', ' ')}</span>
+                                <span class="{value_class}">{diff:+.1f}{unit} ({diff_pct:+.1f}%)</span>
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+            st.markdown('</div>', unsafe_allow_html=True)
+
         with col2:
             if len(df) > 1:
+                # Updated radar metrics as requested
                 radar_metrics = [
                     "Max Temperature (°C)",
                     "PM1_0_CU",
                     "PM2_5_CU",
-                    "PM10_CU",
-                    "Max Value",
-                    "Mean_Red",
-                    "Mean_Green",
-                    "Mean_Blue"
+                    "Average Weight",
+                    "Mean_H",
+                    "Mean_S"
                 ]
+
+                # Filter for metrics that exist in the dataframe
                 radar_metrics = [m for m in radar_metrics if m in df.columns]
+
                 if radar_metrics:
+                    # Calculate previous samples average (excluding the latest)
                     avg_previous = df.iloc[:-1][radar_metrics].mean()
-                    max_values = df[radar_metrics].max()
-                    min_values = df[radar_metrics].min()
-                    range_values = max_values - min_values
-                    range_values = range_values.replace(0, 1)
-                    latest_normalized = (latest_sample[radar_metrics] - min_values) / range_values
-                    avg_normalized = (avg_previous - min_values) / range_values
+
+                    # Custom scaling factors for each metric
+                    # Defines min/max values for proper scaling of each axis
+                    scale_ranges = {
+                        "Max Temperature (°C)": {'min': df["Max Temperature (°C)"].min() * 0.9,
+                                                 'max': df["Max Temperature (°C)"].max() * 1.1},
+                        "PM1_0_CU": {'min': 0, 'max': df["PM1_0_CU"].max() * 1.2},
+                        "PM2_5_CU": {'min': 0, 'max': df["PM2_5_CU"].max() * 1.2},
+                        "Average Weight": {'min': df["Average Weight"].min() * 0.9,
+                                           'max': df["Average Weight"].max() * 1.1},
+                        "Mean_H": {'min': 0, 'max': 360},  # Hue is 0-360 degrees
+                        "Mean_S": {'min': 0, 'max': 100}  # Saturation is 0-100%
+                    }
+
+
+                    # Create custom normalization function for each metric
+                    def normalize_value(value, metric):
+                        if metric in scale_ranges:
+                            min_val = scale_ranges[metric]['min']
+                            max_val = scale_ranges[metric]['max']
+                            # Prevent division by zero
+                            if max_val - min_val == 0:
+                                return 0.5
+                            return (value - min_val) / (max_val - min_val)
+                        # Fallback to regular min-max normalization
+                        min_val = df[metric].min()
+                        max_val = df[metric].max()
+                        if max_val - min_val == 0:
+                            return 0.5
+                        return (value - min_val) / (max_val - min_val)
+
+
+                    # Normalize values using the custom function
+                    latest_normalized = [normalize_value(latest_sample[m], m) for m in radar_metrics]
+                    avg_normalized = [normalize_value(avg_previous[m], m) for m in radar_metrics]
+
+                    # Create radar chart
                     fig = go.Figure()
+
                     fig.add_trace(go.Scatterpolar(
-                        r=avg_normalized.values,
+                        r=avg_normalized,
                         theta=radar_metrics,
                         fill='toself',
                         name='Average Previous',
                         line=dict(color='rgba(135, 206, 250, 0.7)'),
                     ))
+
                     fig.add_trace(go.Scatterpolar(
-                        r=latest_normalized.values,
+                        r=latest_normalized,
                         theta=radar_metrics,
                         fill='toself',
                         name='Latest Sample',
                         line=dict(color='rgba(255, 99, 71, 0.8)'),
                     ))
+
                     fig.update_layout(
                         polar=dict(
                             radialaxis=dict(
                                 visible=True,
-                                range=[0, 1]
+                                range=[0, 1],
+                                showticklabels=False,  # Hide numerical scale
                             )
                         ),
                         showlegend=True,
-                        legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5),
+                        legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
                         margin=dict(l=30, r=30, t=20, b=30),
                         height=440,
-                        font=dict(color="white")
+                        font=dict(color="white"),
+                        title={
+                            'text': 'Coffee Profile Comparison',
+                            'y': 0.95,
+                            'x': 0.5,
+                            'xanchor': 'center',
+                            'yanchor': 'top',
+                            'font': {'color': 'white', 'size': 16}
+                        }
                     )
+
+                    # Add annotations for scale
+                    for i, metric in enumerate(radar_metrics):
+                        if metric in scale_ranges:
+                            min_val = scale_ranges[metric]['min']
+                            max_val = scale_ranges[metric]['max']
+                            fig.add_annotation(
+                                text=f"{metric}<br>Range: {min_val:.1f} - {max_val:.1f}",
+                                x=0.95,
+                                y=0.95 - (i * 0.07),
+                                xref="paper",
+                                yref="paper",
+                                showarrow=False,
+                                font=dict(color="white", size=10)
+                            )
+
                     st.plotly_chart(fig, use_container_width=True)
                 else:
                     st.info("Insufficient metrics available for comparison")
@@ -368,7 +503,7 @@ if __name__ == "__main__":
             "Particulate",
             "Color",
             "Particles",
-            "Values"
+            "Weight"
         ])
 
         with tabs[0]:
@@ -473,12 +608,12 @@ if __name__ == "__main__":
                 st.info("Select particle metrics in the sidebar")
 
         with tabs[4]:
-            values_metrics = selected_metrics.get("Values", [])
-            if values_metrics:
+            weight_metrics = selected_metrics.get("Weight", [])
+            if weight_metrics:
                 fig = px.line(
                     df,
                     x="Sample ID",
-                    y=values_metrics,
+                    y=weight_metrics,
                     markers=True,
                     line_shape="spline",
                     height=280
@@ -490,7 +625,7 @@ if __name__ == "__main__":
                 )
                 st.plotly_chart(fig, use_container_width=True)
             else:
-                st.info("Select value metrics in the sidebar")
+                st.info("Select weight metrics in the sidebar")
 
         st.markdown('<div class="section-header">Statistical Analysis</div>', unsafe_allow_html=True)
 
@@ -518,7 +653,7 @@ if __name__ == "__main__":
         col1, col2 = st.columns(2)
         with col1:
             if len(df) > 1:
-                rank_metrics = ["Max Temperature (°C)", "PM2_5_CU", "particles_beyond_0_3"]
+                rank_metrics = ["Max Temperature (°C)", "PM2_5_CU", "particles_beyond_0_3", "Average Weight"]
                 rank_metrics = [m for m in rank_metrics if m in df.columns]
                 if rank_metrics:
                     percentile_ranks = {}
