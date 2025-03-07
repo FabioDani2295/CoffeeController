@@ -309,6 +309,9 @@ if __name__ == "__main__":
         # Only the modified section for the radar chart
         # Replace the existing radar chart code in the with col2: block
 
+        # Only the modified section for the radar chart
+        # Replace the existing radar chart code in the with col2: block
+
         with col2:
             if len(df) > 1:
                 # Updated radar metrics as requested
@@ -381,8 +384,12 @@ if __name__ == "__main__":
 
                     # Add annotations to show actual values for each metric
                     for i, metric in enumerate(radar_metrics):
+                        # Calculate annotation position (right side of chart, stacked vertically)
+                        annotation_x = 0.95
+                        annotation_y = 0.95 - (i * 0.15)
+
                         fig.add_annotation(
-                            x=0.5, y=0.5,
+                            x=annotation_x, y=annotation_y,
                             xref="paper", yref="paper",
                             text=f"<b>{metric}</b><br>Latest: {latest_sample[metric]:.1f}<br>Avg: {avg_previous[metric]:.1f}",
                             showarrow=False,
@@ -390,8 +397,7 @@ if __name__ == "__main__":
                             bgcolor="rgba(50, 50, 50, 0.7)",
                             bordercolor="white",
                             borderwidth=1,
-                            borderpad=4,
-                            x=0.95, y=0.95 - (i * 0.15)  # Position annotations
+                            borderpad=4
                         )
 
                     st.plotly_chart(fig, use_container_width=True)
