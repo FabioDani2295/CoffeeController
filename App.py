@@ -33,6 +33,7 @@ def inject_css():
     """, unsafe_allow_html=True)
 
 
+# Add this to your inject_compact_css function to fix the metrics text color
 def inject_compact_css():
     st.markdown("""
     <style>
@@ -77,6 +78,7 @@ def inject_compact_css():
         [data-testid="stMetric"] > div:nth-child(2) {
             font-size: 1.2rem !important;
             color: #000 !important;
+            font-weight: bold;
         }
         /* Container for delta values */
         [data-testid="stMetricDelta"] {
@@ -235,14 +237,14 @@ if __name__ == "__main__":
                 st.session_state.selected_metrics[category] = selected_metrics[category]
 
     # DASHBOARD PRINCIPALE
-    st.markdown('<div class="main-header">☕ Coffee Assessment Analysis</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-header">☕ Coffee machine analysis</div>', unsafe_allow_html=True)
 
     # CONFRONTO ULTIMO CAMPIONE DI COFFEE
     if not df.empty:
         # Recupera l'ultimo campione (ultima riga) e i campioni precedenti
         latest_sample = df.iloc[-1]
 
-        st.markdown('<div class="section-header">Latest Coffee Assessment</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Latest coffee overview</div>', unsafe_allow_html=True)
 
         # Visualizzazione del Sample ID
         st.markdown(
