@@ -242,11 +242,11 @@ if __name__ == "__main__":
         # Recupera l'ultimo campione (ultima riga) e i campioni precedenti
         latest_sample = df.iloc[-1]
 
-        st.markdown('<div class="section-header">Latest Coffee Sample Assessment</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Latest coffee assessment</div>', unsafe_allow_html=True)
 
         # Visualizzazione del Sample ID
         st.markdown(
-            '<h4 style="color: white; background-color: #333; padding: 5px; border-radius: 5px;">Sample #{}</h4>'.format(
+            '<h4 style="color: blue; background-color: #333; padding: 5px; border-radius: 2px;">Sample #{}</h4>'.format(
                 len(df)), unsafe_allow_html=True)
 
         # Visualizzazione compatta delle metriche per l'ultimo campione
