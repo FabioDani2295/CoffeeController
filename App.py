@@ -386,13 +386,6 @@ if __name__ == "__main__":
                     )
 
                     st.plotly_chart(fig, use_container_width=True)
-
-                    # Add a simple note about normalization
-                    st.markdown("""
-                    <div style="background-color: rgba(50, 50, 50, 0.7); padding: 8px; border-radius: 5px; font-size: 0.8rem; color: white; margin-top: -15px; text-align: center;">
-                    Each axis normalized 0-100% for proper comparison
-                    </div>
-                    """, unsafe_allow_html=True)
                 else:
                     st.info("Some of the requested metrics are not available in the data")
             else:
