@@ -309,18 +309,28 @@ if __name__ == "__main__":
         # Replace the existing radar chart code in the with col2: section
         with col2:
             if len(df) > 1:
-                # Exactly the metrics you requested
+                # Exactly the metrics you requested - using both original and mapped column names
                 radar_metrics = [
                     "Max Temperature (°C)",
                     "PM1_0_CU",
                     "PM2_5_CU",
-                    "Average Weight",
-                    "Mean_H",
-                    "Mean_S"
+                    "Average Weight"
                 ]
 
-                # Filter to only metrics that exist in the dataframe
-                radar_metrics = [m for m in radar_metrics if m in df.columns]
+                # Check for both original and mapped column names for the color metrics
+                if "Mean_H" in df.columns:
+                    radar_metrics.append("Mean_H")
+                elif "mean_H" in df.columns:
+                    radar_metrics.append("mean_H")
+
+                if "Mean_S" in df.columns:
+                    radar_metrics.append("Mean_S")
+                elif "mean_S" in df.columns:
+                    radar_metrics.append("mean_S")
+
+                # Debug information - print what columns are available and which ones we're using
+                print("Available columns:", df.columns.tolist())
+                print("Using radar metrics:", radar_metrics)
 
                 if radar_metrics:
                     # Calculate statistics for normalization
