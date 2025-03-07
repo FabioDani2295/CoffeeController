@@ -312,9 +312,11 @@ if __name__ == "__main__":
                     "Max Temperature (°C)",
                     "PM1_0_CU",
                     "PM2_5_CU",
-                    "Average Weight",
-                    "mean_H",
-                    "mean_S",
+                    "PM10_CU",
+                    "Max Value",
+                    "Mean_Red",
+                    "Mean_Green",
+                    "Mean_Blue"
                 ]
                 radar_metrics = [m for m in radar_metrics if m in df.columns]
                 if radar_metrics:
@@ -366,7 +368,7 @@ if __name__ == "__main__":
             "Particulate",
             "Color",
             "Particles",
-            "Values"
+            "Weight"
         ])
 
         with tabs[0]:
