@@ -15,6 +15,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+
 # Definire una funzione per iniettare il CSS personalizzato
 def inject_css():
     st.markdown("""
@@ -30,6 +31,7 @@ def inject_css():
         }
     </style>
     """, unsafe_allow_html=True)
+
 
 def inject_compact_css():
     st.markdown("""
@@ -106,10 +108,36 @@ def inject_compact_css():
     </style>
     """, unsafe_allow_html=True)
 
+
+# Map new column names to expected names in the app
+def map_column_names(df):
+    """Map the new column names from process_images to the expected column names in the app"""
+    column_mapping = {
+        'mean_H': 'Mean_H',
+        'mean_S': 'Mean_S',
+        'mean_a': 'a*',
+        'mean_b': 'b*',
+        'dom_R': 'Mean_Red',
+        'dom_G': 'Mean_Green',
+        'dom_B': 'Mean_Blue'
+    }
+
+    # Create a copy of the dataframe
+    df_mapped = df.copy()
+
+    # Rename columns based on mapping
+    for new_col, old_col in column_mapping.items():
+        if new_col in df_mapped.columns:
+            df_mapped.rename(columns={new_col: old_col}, inplace=True)
+
+    return df_mapped
+
+
 if __name__ == "__main__":
     # Iniettare il CSS personalizzato dopo la configurazione della pagina
     inject_css()
     inject_compact_css()
+
 
     # Funzione per il caricamento dei dati
     @st.cache_data(ttl=30)  # Cache dei dati per 30 secondi
@@ -120,11 +148,16 @@ if __name__ == "__main__":
             df = pd.read_csv(csv_url)
             # Aggiunge una colonna "Sample ID" per il tracciamento
             df['Sample ID'] = range(1, len(df) + 1)
+            # Map new column names to old ones
+            df = map_column_names(df)
             return df
         except Exception as e:
             st.error(f"Error loading data: {e}")
             # Restituisce dati di esempio se il caricamento fallisce
-            return pd.read_csv("CoffeStatistics.csv") if st.session_state.get("demo_mode", False) else pd.DataFrame()
+            df = pd.read_csv("CoffeStatistics.csv") if st.session_state.get("demo_mode", False) else pd.DataFrame()
+            df = map_column_names(df)
+            return df
+
 
     # Inizializzazione dello stato di sessione per le selezioni
     if 'selected_metrics' not in st.session_state:
@@ -176,7 +209,7 @@ if __name__ == "__main__":
             "Temperature": [col for col in df.columns if "Temperature" in col],
             "Particulate Matter": [col for col in df.columns if "PM" in col],
             "Particles": [col for col in df.columns if "particles_beyond" in col],
-            "Color": ['Mean_Red', 'Mean_Green', 'Mean_Blue', 'L*', 'a*', 'b*', 'Dist_White', 'Dist_Gray'],
+            "Color": ['Mean_Red', 'Mean_Green', 'Mean_Blue', 'Mean_H', 'Mean_S', 'a*', 'b*', 'Dist_White', 'Dist_Gray'],
             "Values": ['Min Value', 'Max Value', 'Range', 'Mean']
         }
 
@@ -186,11 +219,15 @@ if __name__ == "__main__":
 
         # Per ogni categoria, viene creato un multiselect
         for category, columns in column_categories.items():
-            if columns:  # Mostra solo le categorie con colonne
-                default_selection = st.session_state.selected_metrics.get(category, columns[:2])
+            # Filter out columns that don't exist in df
+            available_columns = [col for col in columns if col in df.columns]
+            if available_columns:  # Mostra solo le categorie con colonne
+                default_selection = [col for col in
+                                     st.session_state.selected_metrics.get(category, available_columns[:2]) if
+                                     col in available_columns]
                 selected_metrics[category] = st.multiselect(
                     f"{category}",
-                    options=columns,
+                    options=available_columns,
                     default=default_selection,
                     key=f"select_{category}"
                 )
@@ -248,7 +285,8 @@ if __name__ == "__main__":
 
         with col1:
             if all(col in df.columns for col in ['Mean_Red', 'Mean_Green', 'Mean_Blue']):
-                r, g, b = int(latest_sample['Mean_Red']), int(latest_sample['Mean_Green']), int(latest_sample['Mean_Blue'])
+                r, g, b = int(latest_sample['Mean_Red']), int(latest_sample['Mean_Green']), int(
+                    latest_sample['Mean_Blue'])
                 st.markdown(
                     f"""
                     <div style="
@@ -395,7 +433,8 @@ if __name__ == "__main__":
                 with col2:
                     st.markdown("#### Color Swatches")
                     for i in range(len(df)):
-                        r, g, b = int(df.iloc[i]['Mean_Red']), int(df.iloc[i]['Mean_Green']), int(df.iloc[i]['Mean_Blue'])
+                        r, g, b = int(df.iloc[i]['Mean_Red']), int(df.iloc[i]['Mean_Green']), int(
+                            df.iloc[i]['Mean_Blue'])
                         sample_id = i + 1
                         st.markdown(
                             f"""
