@@ -134,6 +134,8 @@ if __name__ == "__main__":
     # Funzione per il caricamento dei dati
     @st.cache_data(ttl=30)  # Cache dei dati per 30 secondi
     def load_data():
+        # At the start of your load_data function
+        st.cache_data.clear()  # Force clear the entire cache
         timestamp = int(time.time())
         try:
             csv_url = f"https://raw.githubusercontent.com/FabioDani2295/CoffeeController/main/CoffeStatistics.csv?{timestamp}"
