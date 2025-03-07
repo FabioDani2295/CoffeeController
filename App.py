@@ -204,7 +204,7 @@ if __name__ == "__main__":
             help="Use local data if online source unavailable"
         )
 
-        # Organizzazione delle colonne per categoria
+        # Organizzazione delle colonne per categoria, aggiornata
         column_categories = {
             "Temperature": [col for col in df.columns if "Temperature" in col],
             "Particulate Matter": [col for col in df.columns if "PM" in col],
