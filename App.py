@@ -210,7 +210,7 @@ if __name__ == "__main__":
             "Particulate Matter": [col for col in df.columns if "PM" in col],
             "Particles": [col for col in df.columns if "particles_beyond" in col],
             "Color": ['Mean_Red', 'Mean_Green', 'Mean_Blue', 'Mean_H', 'Mean_S', 'a*', 'b*', 'Dist_White', 'Dist_Gray'],
-            "Values": ['Min Value', 'Max Value', 'Range', 'Mean']
+            "Weight": ['Min Weight', 'Max Weight', 'Weight Range', 'Average Weight']
         }
 
         # Selezione delle metriche nella sidebar
