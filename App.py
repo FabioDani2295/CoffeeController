@@ -16,32 +16,16 @@ st.set_page_config(
 )
 
 
-# Definire una funzione per iniettare il CSS personalizzato
+# Unified CSS injection function
 def inject_css():
     st.markdown("""
     <style>
-        /* Cambia il colore del testo delle metriche in nero */
-        div[data-testid="stMetricLabel"] {
-            color: black !important;
-            font-weight: bold;
-        }
-        div[data-testid="stMetricValue"] {
-            color: black !important;
-            font-weight: bold;
-        }
-    </style>
-    """, unsafe_allow_html=True)
-
-
-# Add this to your inject_compact_css function to fix the metrics text color
-def inject_compact_css():
-    st.markdown("""
-    <style>
-        /* Ensure high contrast for all text elements */
+        /* Global app styling */
         .stApp {
             background-color: #1E1E1E;
         }
-        /* More compact design with CamelCase */
+
+        /* Header styling */
         .main-header {
             font-size: 1.8rem;
             font-weight: bold;
@@ -50,6 +34,7 @@ def inject_compact_css():
             margin-bottom: 0.5rem;
             text-transform: capitalize;
         }
+
         .section-header {
             color: white;
             font-size: 1.2rem;
@@ -57,53 +42,60 @@ def inject_compact_css():
             margin-bottom: 0.3rem;
             text-transform: capitalize;
         }
-        /* High contrast metrics styling with black labels */
-        [data-testid="stMetric"] {
-            background-color: white;
-            padding: 0.5rem;
-            border-radius: 0.3rem;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            margin-bottom: 0.5rem;
-        }
-        /* Make metric labels (titles) black for visibility */
-        [data-testid="stMetric"] > div:first-child {
+
+        /* DIRECT METRIC STYLING - with important flags to override Streamlit defaults */
+        div[data-testid="stMetricLabel"] {
             font-size: 0.9rem !important;
             color: black !important;
-            font-weight: bold;
-            background-color: #f0f0f0;
-            padding: 3px 5px;
-            border-radius: 3px;
+            font-weight: bold !important;
+            background-color: #f0f0f0 !important;
+            padding: 3px 5px !important;
+            border-radius: 3px !important;
         }
-        /* Main metric value */
-        [data-testid="stMetric"] > div:nth-child(2) {
+
+        div[data-testid="stMetricValue"] {
             font-size: 1.2rem !important;
-            color: #000 !important;
-            font-weight: bold;
+            color: black !important;
+            font-weight: bold !important;
         }
-        /* Container for delta values */
+
+        /* Make the metric container stand out better */
+        div[data-testid="stMetricValue"], div[data-testid="stMetricLabel"] {
+            text-shadow: none !important;
+        }
+
+        div[data-testid="stMetric"] {
+            background-color: white !important;
+            padding: 8px !important;
+            border-radius: 5px !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+            margin-bottom: 10px !important;
+        }
+
+        /* Additional styling from your original CSS */
         [data-testid="stMetricDelta"] {
-            background-color: rgba(250, 250, 250, 0.9);
-            padding: 2px 5px;
-            border-radius: 3px;
+            background-color: rgba(250, 250, 250, 0.9) !important;
+            padding: 2px 5px !important;
+            border-radius: 3px !important;
         }
-        /* Hide the default delta arrow */
+
         [data-testid="stMetricDelta"] svg {
             display: none !important;
         }
-        /* Make the text smaller */
+
         .small-font {
             font-size: 0.9rem;
         }
-        /* Reduce spacing */
+
         div.block-container {
             padding-top: 1rem;
             padding-bottom: 1rem;
         }
-        /* Customize sidebar */
+
         .css-1d391kg, .css-1lcbmhc {
             padding-top: 1rem;
         }
-        /* Dataframe styling */
+
         .dataframe-container {
             font-size: 0.8rem;
         }
@@ -137,8 +129,7 @@ def map_column_names(df):
 
 if __name__ == "__main__":
     # Iniettare il CSS personalizzato dopo la configurazione della pagina
-    inject_css()
-    inject_compact_css()
+    inject_css()  # Now using only one CSS injection function
 
 
     # Funzione per il caricamento dei dati
@@ -320,7 +311,7 @@ if __name__ == "__main__":
             except Exception as e:
                 st.warning(f"Coffee image not available: {e}")
 
-        # Replace the existing radar chart code in the with col2: section
+        # Updated radar chart code with your requested metrics
         with col2:
             if len(df) > 1:
                 # Exactly the metrics you requested - using both original and mapped column names
@@ -341,10 +332,6 @@ if __name__ == "__main__":
                     radar_metrics.append("Mean_S")
                 elif "mean_S" in df.columns:
                     radar_metrics.append("mean_S")
-
-                # Debug information - print what columns are available and which ones we're using
-                print("Available columns:", df.columns.tolist())
-                print("Using radar metrics:", radar_metrics)
 
                 if radar_metrics:
                     # Calculate statistics for normalization
@@ -400,10 +387,19 @@ if __name__ == "__main__":
                     )
 
                     st.plotly_chart(fig, use_container_width=True)
+
+                    # Add a simple note about normalization
+                    st.markdown("""
+                    <div style="background-color: rgba(50, 50, 50, 0.7); padding: 8px; border-radius: 5px; font-size: 0.8rem; color: white; margin-top: -15px; text-align: center;">
+                    Each axis normalized 0-100% for proper comparison
+                    </div>
+                    """, unsafe_allow_html=True)
                 else:
                     st.info("Some of the requested metrics are not available in the data")
             else:
                 st.info("Only one sample available. More samples needed for comparison.")
+
+        st.markdown('<div class="section-header">Historical Sample Analysis</div>', unsafe_allow_html=True)
 
         tabs = st.tabs([
             "Temperature",
@@ -515,12 +511,12 @@ if __name__ == "__main__":
                 st.info("Select particle metrics in the sidebar")
 
         with tabs[4]:
-            values_metrics = selected_metrics.get("Values", [])
-            if values_metrics:
+            weight_metrics = selected_metrics.get("Weight", [])
+            if weight_metrics:
                 fig = px.line(
                     df,
                     x="Sample ID",
-                    y=values_metrics,
+                    y=weight_metrics,
                     markers=True,
                     line_shape="spline",
                     height=280
@@ -532,7 +528,7 @@ if __name__ == "__main__":
                 )
                 st.plotly_chart(fig, use_container_width=True)
             else:
-                st.info("Select value metrics in the sidebar")
+                st.info("Select weight metrics in the sidebar")
 
         st.markdown('<div class="section-header">Statistical Analysis</div>', unsafe_allow_html=True)
 
