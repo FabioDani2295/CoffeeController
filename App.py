@@ -278,7 +278,7 @@ if __name__ == "__main__":
                     # Create a card HTML
                     card_html = f"""
                     <div style="background-color: white; padding: 10px; border-radius: 5px; margin: 5px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                        <div style="font-size: 0.9rem; font-weight: bold; color: black; margin-bottom: 5px; background-color: #f0f0f0; padding: 3px; border-radius: 3px;">{label}</div>
+                        <div style="font-size: 0.9rem; font-weight: bold; color: black; margin-bottom: 5px; background-color: #c7bdbd; padding: 3px; border-radius: 3px;">{label}</div>
                         <div style="font-size: 1.2rem; font-weight: bold; color: black;">{value:.1f}{unit}</div>
                         <div style="font-size: 0.8rem; color: {diff_color}; font-weight: bold;">{diff_text} vs avg</div>
                     </div>
@@ -287,7 +287,7 @@ if __name__ == "__main__":
                     # Create a card HTML without comparison
                     card_html = f"""
                     <div style="background-color: white; padding: 10px; border-radius: 5px; margin: 5px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                        <div style="font-size: 0.9rem; font-weight: bold; color: black; margin-bottom: 5px; background-color: #f0f0f0; padding: 3px; border-radius: 3px;">{label}</div>
+                        <div style="font-size: 0.9rem; font-weight: bold; color: black; margin-bottom: 5px; background-color: #c7bdbd; padding: 3px; border-radius: 3px;">{label}</div>
                         <div style="font-size: 1.2rem; font-weight: bold; color: black;">{value:.1f}{unit}</div>
                     </div>
                     """
